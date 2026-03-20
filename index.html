@@ -201,7 +201,7 @@ main{max-width:1400px;margin:0 auto;padding:24px 20px}
 .days-badge{font-family:var(--font-mono);font-size:10px;padding:2px 7px;border-radius:10px;background:var(--bg3);border:1px solid var(--border);color:var(--text-muted);white-space:nowrap;flex-shrink:0}
 .days-badge.new-proj{border-color:rgba(57,255,110,0.3);color:var(--green);background:rgba(57,255,110,0.06)}
 .days-badge.week-proj{border-color:rgba(245,230,66,0.3);color:var(--yellow);background:rgba(245,230,66,0.06)}
-.card-body{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0}
+.card-body{display:grid;grid-template-columns:2fr 1fr;gap:0}
 @media(max-width:900px){.card-body{grid-template-columns:1fr}}
 .card-section{padding:14px 18px;border-right:1px solid var(--border)}
 .card-section:last-child{border-right:none}
@@ -320,9 +320,10 @@ main{max-width:1400px;margin:0 auto;padding:24px 20px}
 .address-value-row{display:flex;align-items:center;gap:6px}
 .address-value{flex:1;font-family:var(--font-mono);font-size:12px;color:var(--cyan);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .wallet-footer{padding:10px 16px;border-top:1px solid var(--border);display:flex;justify-content:flex-end}
-.addr-row-form{display:flex;gap:8px;margin-bottom:8px;align-items:flex-start}
-.addr-row-form .form-input:first-child{flex:0 0 110px}
-.addr-row-form .form-input:last-child{flex:1;font-size:12px}
+.addr-row-form{display:flex;gap:8px;margin-bottom:8px;align-items:flex-start;flex-wrap:wrap}
+.addr-row-form .form-input:nth-child(1){flex:0 0 100px}
+.addr-row-form .form-input:nth-child(2){flex:2;min-width:140px}
+.addr-row-form .form-input:nth-child(3){flex:1.5;min-width:120px}
 
 /* ============================================
    IMPORT/EXPORT
@@ -341,9 +342,73 @@ main{max-width:1400px;margin:0 auto;padding:24px 20px}
 .format-code{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);color:var(--green);font-family:var(--font-mono);font-size:11px;line-height:1.6;padding:14px;overflow-x:auto;white-space:pre;max-height:260px;overflow-y:auto}
 
 /* ============================================
-   TOAST & MISC
+   NETWORK TYPE BADGES (mainnet/testnet)
 ============================================ */
-#toast{position:fixed;bottom:24px;right:24px;background:var(--card);border:1px solid var(--green);border-radius:var(--radius);color:var(--green);font-family:var(--font-mono);font-size:13px;padding:12px 20px;box-shadow:var(--shadow-green);z-index:2000;transform:translateY(100px);opacity:0;transition:all 0.3s;pointer-events:none}
+.network-badge {
+  font-family:var(--font-mono);font-size:10px;padding:2px 8px;
+  border-radius:10px;border:1px solid;white-space:nowrap;flex-shrink:0;
+  font-weight:700;letter-spacing:0.5px;
+}
+.network-mainnet {
+  color:#39ff6e;border-color:rgba(57,255,110,0.4);background:rgba(57,255,110,0.08);
+}
+.network-testnet {
+  color:#f97316;border-color:rgba(249,115,22,0.4);background:rgba(249,115,22,0.08);
+}
+
+/* Network filter pills */
+.network-filter-wrap {
+  display:flex;gap:6px;align-items:center;flex-wrap:wrap;
+  padding:10px 0 0;
+}
+.net-filter-btn {
+  background:var(--bg3);border:1px solid var(--border);border-radius:20px;
+  color:var(--text-muted);font-family:var(--font-main);font-size:12px;font-weight:600;
+  padding:4px 12px;cursor:pointer;transition:all 0.2s;letter-spacing:0.3px;
+}
+.net-filter-btn:hover { border-color:var(--yellow-dim);color:var(--yellow); }
+.net-filter-btn.active-all { background:var(--yellow);color:var(--bg);border-color:var(--yellow); }
+.net-filter-btn.active-mainnet { background:rgba(57,255,110,0.15);color:#39ff6e;border-color:rgba(57,255,110,0.5); }
+.net-filter-btn.active-testnet { background:rgba(249,115,22,0.15);color:#f97316;border-color:rgba(249,115,22,0.5); }
+
+/* Network checkbox row in modal */
+.network-checkbox-row {
+  display:flex;gap:16px;flex-wrap:wrap;margin-top:6px;
+}
+.net-checkbox-label {
+  display:flex;align-items:center;gap:8px;cursor:pointer;
+  font-size:14px;font-weight:600;padding:8px 14px;
+  border:1px solid var(--border);border-radius:var(--radius);
+  transition:all 0.15s;color:var(--text-dim);background:var(--bg3);
+  flex:1;min-width:120px;justify-content:center;
+}
+.net-checkbox-label:hover { border-color:var(--border-glow); }
+.net-checkbox-label.selected-mainnet { border-color:rgba(57,255,110,0.5);color:#39ff6e;background:rgba(57,255,110,0.08); }
+.net-checkbox-label.selected-testnet { border-color:rgba(249,115,22,0.5);color:#f97316;background:rgba(249,115,22,0.08); }
+.net-checkbox-label input { display:none; }
+</style>
+<style>
+/* SCRATCH PAD */
+.scratchpad-wrap{display:flex;flex-direction:column;gap:0;min-height:400px}
+.scratchpad-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;flex-wrap:wrap}
+.scratchpad-textarea{flex:1;width:100%;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);color:var(--text);font-family:var(--font-mono);font-size:14px;line-height:1.7;padding:20px;outline:none;resize:none;transition:border-color 0.2s;min-height:calc(100vh - 240px)}
+.scratchpad-textarea:focus{border-color:var(--yellow-dim);box-shadow:0 0 15px rgba(245,230,66,0.08)}
+.scratchpad-textarea::placeholder{color:var(--text-muted)}
+.scratchpad-status{font-family:var(--font-mono);font-size:11px;color:var(--text-muted);text-align:right;margin-top:6px;transition:color 0.3s}
+.scratchpad-status.saved{color:var(--green)}
+/* LINK NOTE */
+.link-note{font-family:var(--font-mono);font-size:11px;color:var(--text-muted);padding:3px 10px 5px;font-style:italic;line-height:1.4;word-break:break-word;border-top:1px dashed var(--border)}
+.link-item-wrap{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);transition:border-color 0.15s;margin-bottom:0}
+.link-item-wrap:hover{border-color:var(--border-glow)}
+.link-item{background:transparent;border:none;border-radius:0;padding:6px 10px}
+.link-item:hover{border-color:transparent}
+</style>
+<style>
+.address-note{font-family:var(--font-mono);font-size:11px;color:var(--text-muted);margin-top:3px;font-style:italic;line-height:1.4;word-break:break-word}
+.addr-note-input{width:100%;background:transparent;border:none;border-top:1px dashed var(--border);color:var(--text-muted);font-family:var(--font-mono);font-size:11px;padding:4px 0 0;margin-top:4px;outline:none;transition:color 0.15s}
+.addr-note-input:focus{color:var(--text);border-color:var(--yellow-dim)}
+.addr-note-input::placeholder{color:var(--text-muted);opacity:0.6}
+</style>bottom:24px;right:24px;background:var(--card);border:1px solid var(--green);border-radius:var(--radius);color:var(--green);font-family:var(--font-mono);font-size:13px;padding:12px 20px;box-shadow:var(--shadow-green);z-index:2000;transform:translateY(100px);opacity:0;transition:all 0.3s;pointer-events:none}
 #toast.show{transform:translateY(0);opacity:1}
 .browser-toast{position:fixed;top:80px;left:50%;transform:translateX(-50%) scale(0.9);background:var(--card2);border:1px solid var(--yellow-dim);border-radius:var(--radius-lg);padding:16px 24px;font-family:var(--font-mono);font-size:14px;color:var(--yellow);text-align:center;box-shadow:var(--shadow-yellow);z-index:2000;opacity:0;pointer-events:none;transition:all 0.3s;max-width:400px;width:90%}
 .browser-toast.show{opacity:1;transform:translateX(-50%) scale(1)}
@@ -405,6 +470,7 @@ main{max-width:1400px;margin:0 auto;padding:24px 20px}
   <button class="tab-btn" data-tab="daily" onclick="switchTab('daily')">📋 Daily Tasks</button>
   <button class="tab-btn" id="tab-alerts-btn" data-tab="alerts" onclick="switchTab('alerts')">🔔 Alerty</button>
   <button class="tab-btn" data-tab="wallets" onclick="switchTab('wallets')">👛 Portfele</button>
+  <button class="tab-btn" data-tab="scratch" onclick="switchTab('scratch')">📝 Notatnik</button>
 </nav>
 
 <main>
@@ -424,6 +490,14 @@ main{max-width:1400px;margin:0 auto;padding:24px 20px}
         <button class="btn btn-secondary" onclick="exportProjects()">📤 Eksport</button>
         <button class="btn btn-primary" id="btn-add-project">+ Dodaj projekt</button>
       </div>
+    </div>
+    <!-- Filtry sieci -->
+    <div class="network-filter-wrap">
+      <span style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted);letter-spacing:1px">SIEĆ:</span>
+      <button class="net-filter-btn active-all" data-net="all"    onclick="setNetFilter('all')">Wszystkie</button>
+      <button class="net-filter-btn"            data-net="mainnet" onclick="setNetFilter('mainnet')">🟢 Mainnet</button>
+      <button class="net-filter-btn"            data-net="testnet" onclick="setNetFilter('testnet')">🟠 Testnet</button>
+      <button class="net-filter-btn"            data-net="none"    onclick="setNetFilter('none')">— Bez oznaczenia</button>
     </div>
     <div id="projects-grid"></div>
   </div>
@@ -478,6 +552,25 @@ main{max-width:1400px;margin:0 auto;padding:24px 20px}
     </div>
     <div class="wallets-grid" id="wallets-grid"></div>
   </div>
+  <!-- NOTATNIK (SCRATCH PAD) -->
+  <div class="tab-panel" id="tab-scratch">
+    <div class="scratchpad-toolbar">
+      <div>
+        <h2 style="font-size:20px;font-weight:700;margin-bottom:4px">📝 Szybki Notatnik</h2>
+        <div style="font-family:var(--font-mono);font-size:12px;color:var(--text-muted)">Brudnopis — zapisuje się automatycznie</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="btn btn-secondary" onclick="clearScratchPad()" title="Wyczyść notatnik">🗑 Wyczyść</button>
+        <button class="btn btn-secondary" onclick="copyScratchPad()" title="Kopiuj całość">📋 Kopiuj</button>
+      </div>
+    </div>
+    <textarea
+      class="scratchpad-textarea"
+      id="scratchpad"
+      placeholder="Wpisz cokolwiek... adresy, linki, myśli, notatki w locie.&#10;&#10;Wszystko zapisuje się automatycznie w chmurze."
+    ></textarea>
+    <div class="scratchpad-status" id="scratchpad-status">gotowy</div>
+  </div>
 
 </main>
 </div><!-- /#app-wrapper -->
@@ -516,6 +609,23 @@ main{max-width:1400px;margin:0 auto;padding:24px 20px}
       <label class="form-label">Notatki</label>
       <textarea class="form-textarea" id="new-project-notes" placeholder="Dodaj notatki..."></textarea>
     </div>
+    <div class="form-group" style="margin-top:4px">
+      <label class="form-label">Typ sieci (opcjonalne)</label>
+      <div class="network-checkbox-row">
+        <label class="net-checkbox-label" id="label-mainnet" onclick="selectNetwork('mainnet')">
+          <input type="radio" name="new-project-network" value="mainnet" id="radio-mainnet">
+          🟢 Mainnet
+        </label>
+        <label class="net-checkbox-label" id="label-testnet" onclick="selectNetwork('testnet')">
+          <input type="radio" name="new-project-network" value="testnet" id="radio-testnet">
+          🟠 Testnet
+        </label>
+        <label class="net-checkbox-label" id="label-none-net" onclick="selectNetwork('')">
+          <input type="radio" name="new-project-network" value="" id="radio-none-net" checked>
+          — Brak
+        </label>
+      </div>
+    </div>
     <div style="display:flex;gap:12px;flex-wrap:wrap">
       <div class="form-group" style="flex:1;min-width:140px">
         <label class="form-label">𝕏 Link X / Twitter</label>
@@ -549,9 +659,35 @@ main{max-width:1400px;margin:0 auto;padding:24px 20px}
       <label class="form-label">Nazwa (opcjonalna)</label>
       <input type="text" class="form-input" id="add-link-name" placeholder="Krótka nazwa linku">
     </div>
+    <div class="form-group">
+      <label class="form-label">Notatka (opcjonalna)</label>
+      <input type="text" class="form-input" id="add-link-note" placeholder="np. główna aplikacja, stara wersja...">
+    </div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal('modal-add-link')">Anuluj</button>
       <button class="btn btn-primary" onclick="saveNewLink()">Dodaj link</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edytuj notatkę linku -->
+<div class="modal-overlay" id="modal-edit-link-note">
+  <div class="modal" style="max-width:460px">
+    <div class="modal-header">
+      <div class="modal-title">// NOTATKA DO LINKU</div>
+      <button class="modal-close" onclick="closeModal('modal-edit-link-note')">✕</button>
+    </div>
+    <input type="hidden" id="edit-note-project-id">
+    <input type="hidden" id="edit-note-link-id">
+    <div style="font-family:var(--font-mono);font-size:12px;color:var(--cyan);margin-bottom:16px;word-break:break-all" id="edit-note-link-url"></div>
+    <div class="form-group">
+      <label class="form-label">Notatka</label>
+      <input type="text" class="form-input" id="edit-note-value" placeholder="np. główna aplikacja, stara wersja, tylko testnet...">
+    </div>
+    <div style="font-size:11px;color:var(--text-muted);margin-top:-8px">Zostaw puste żeby usunąć notatkę.</div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-edit-link-note')">Anuluj</button>
+      <button class="btn btn-primary" onclick="saveLinkNote()">Zapisz</button>
     </div>
   </div>
 </div>
@@ -765,6 +901,7 @@ function signInWithGoogle() {
 
 function signOut() {
   if (!confirm('Wylogować się?')) return;
+  scratchLoaded = false;
   auth.signOut();
 }
 
@@ -965,6 +1102,7 @@ function switchTab(tab) {
   if (tab === 'daily')   renderDailyTasks();
   if (tab === 'alerts')  renderAlerts();
   if (tab === 'wallets') renderWallets();
+  if (tab === 'scratch') initScratchPad();
 }
 
 /* ============================================
@@ -1030,6 +1168,21 @@ function copyLink(url) {
 ============================================ */
 let currentFilter = 'all';
 let currentSearch = '';
+let currentNetFilter = 'all'; // 'all' | 'mainnet' | 'testnet' | 'none'
+
+function setNetFilter(v) {
+  currentNetFilter = v;
+  document.querySelectorAll('.net-filter-btn').forEach(b => {
+    b.classList.remove('active-all','active-mainnet','active-testnet');
+  });
+  const btn = document.querySelector(`.net-filter-btn[data-net="${v}"]`);
+  if (btn) {
+    if (v === 'all')     btn.classList.add('active-all');
+    if (v === 'mainnet') btn.classList.add('active-mainnet');
+    if (v === 'testnet') btn.classList.add('active-testnet');
+  }
+  render();
+}
 
 function render() {
   updateStats();
@@ -1043,6 +1196,9 @@ function render() {
     );
   }
   if (currentFilter === 'starred') list = list.filter(p => p.starred);
+  if (currentNetFilter === 'mainnet') list = list.filter(p => p.network === 'mainnet');
+  else if (currentNetFilter === 'testnet') list = list.filter(p => p.network === 'testnet');
+  else if (currentNetFilter === 'none') list = list.filter(p => !p.network);
 
   const grid = document.getElementById('projects-grid');
   if (!grid) return;
@@ -1097,6 +1253,10 @@ function renderCard(p) {
     const label = days === 0 ? 'dziś' : days === 1 ? 'wczoraj' : `${days} dni`;
     daysBadge = `<span class="days-badge ${cls}">${label}</span>`;
   }
+  // Badge sieci
+  let networkBadge = '';
+  if (p.network === 'mainnet') networkBadge = `<span class="network-badge network-mainnet">MAINNET</span>`;
+  else if (p.network === 'testnet') networkBadge = `<span class="network-badge network-testnet">TESTNET</span>`;
   const xUrl = p.socialX || '', dcUrl = p.socialDiscord || '';
   let socialHtml = '';
   if (xUrl) socialHtml += `<a class="social-btn x-btn" href="${esc(xUrl)}" target="_blank" rel="noopener">${X_SVG} X</a>`;
@@ -1114,25 +1274,19 @@ function renderCard(p) {
     <div class="project-badges">
       <span class="badge green">${linkCount} link${linkCount!==1?'i':''}</span>
       ${daysBadge}
+      ${networkBadge}
     </div>
     <div class="card-social">${socialHtml}</div>
     <button class="btn-icon ${p.starred?'starred':''}" onclick="toggleStar('${p.id}')">⭐</button>
   </div>
   <div class="card-body">
-    <div class="card-section">
-      <div class="section-title">🔗 Linki</div>
+    <div class="card-section" style="grid-column:1/3">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:10px;flex-wrap:wrap">
+        <div class="section-title" style="margin-bottom:0">🔗 Linki</div>
+        ${linkCount > 0 ? `<button class="btn btn-secondary" style="font-size:12px;padding:5px 14px" onclick="openAllLinks('${p.id}')">🌐 Otwórz wszystkie</button>` : ''}
+      </div>
       ${linkCount===0 ? '<div class="no-links">Brak linków</div>' : `<ul class="links-list">${(p.links||[]).map(l=>renderLink(p.id,l)).join('')}</ul>`}
       <button class="btn btn-ghost" onclick="openAddLink('${p.id}')">+ Dodaj link</button>
-    </div>
-    <div class="card-section">
-      <div class="section-title">🌐 Przeglądarka</div>
-      <div class="browsers-grid">
-        <button class="browser-btn ff" onclick="openInBrowser('${p.id}','Firefox')"><span class="browser-icon">🦊</span>Firefox</button>
-        <button class="browser-btn ch" onclick="openInBrowser('${p.id}','Chrome')"><span class="browser-icon">🟡</span>Chrome</button>
-        <button class="browser-btn br" onclick="openInBrowser('${p.id}','Brave')"><span class="browser-icon">🦁</span>Brave</button>
-        <button class="browser-btn op" onclick="openInBrowser('${p.id}','Opera')"><span class="browser-icon">🔴</span>Opera</button>
-        <button class="browser-btn ed" onclick="openInBrowser('${p.id}','Edge')"><span class="browser-icon">🔷</span>Edge</button>
-      </div>
     </div>
     <div class="card-section">
       <div class="section-title">📝 Notatki</div>
@@ -1150,9 +1304,23 @@ function renderLink(projectId, link) {
   const display = link.name ? esc(link.name) : esc(link.url);
   const fav = (() => { try { return `https://www.google.com/s2/favicons?domain=${new URL(link.url).hostname}&sz=32`; } catch { return null; } })();
   const favHtml = fav ? `<img class="link-favicon" src="${fav}" alt="" onerror="this.style.display='none'">` : '';
-  return `<li class="link-item">${favHtml}<a href="${esc(link.url)}" target="_blank" rel="noopener" title="${esc(link.url)}">${display}</a>
-    <button class="link-copy-btn" onclick="copyLink('${esc(link.url)}')">📋</button>
-    <button class="link-delete-btn" onclick="deleteLinkFromProject('${projectId}','${link.id}')">✕</button></li>`;
+  const noteHtml = link.note ? `<div class="link-note">💬 ${esc(link.note)}</div>` : '';
+  return `<li class="link-item-wrap">
+    <div class="link-item">${favHtml}
+      <a href="${esc(link.url)}" target="_blank" rel="noopener" title="${esc(link.url)}">${display}</a>
+      <button class="link-copy-btn" title="Kopiuj URL" onclick="copyLink('${esc(link.url)}')">📋</button>
+      <button class="link-copy-btn" title="Edytuj notatkę" onclick="editLinkNote('${projectId}','${link.id}')">✏️</button>
+      <button class="link-delete-btn" onclick="deleteLinkFromProject('${projectId}','${link.id}')">✕</button>
+    </div>
+    ${noteHtml}
+  </li>`;
+}
+
+function openAllLinks(projectId) {
+  const proj = projects.find(p => p.id === projectId);
+  if (!proj || !(proj.links||[]).length) { showBrowserToast('⚠️ Brak linków w projekcie!'); return; }
+  proj.links.forEach(l => window.open(l.url, '_blank'));
+  showBrowserToast(`🌐 Otwarto ${proj.links.length} link${proj.links.length !== 1 ? 'ów' : ''}`);
 }
 
 /* ============================================
@@ -1163,6 +1331,8 @@ document.getElementById('btn-add-project').addEventListener('click', () => {
   document.getElementById('new-project-notes').value = '';
   document.getElementById('new-project-x').value = '';
   document.getElementById('new-project-discord').value = '';
+  // Reset network selection
+  selectNetwork('');
   document.getElementById('new-links-container').innerHTML = `
     <div class="link-row"><div class="link-row-inputs">
       <input type="text" class="form-input link-url" placeholder="https://...">
@@ -1170,6 +1340,24 @@ document.getElementById('btn-add-project').addEventListener('click', () => {
     </div><button class="btn-icon" onclick="removeLinkRow(this)" style="color:var(--red);margin-top:2px">✕</button></div>`;
   openModal('modal-add-project');
 });
+
+// Wybór sieci w modalu — wizualne zaznaczenie
+function selectNetwork(val) {
+  ['mainnet','testnet',''].forEach(v => {
+    const id = v === '' ? 'label-none-net' : `label-${v}`;
+    const label = document.getElementById(id);
+    if (!label) return;
+    label.classList.remove('selected-mainnet','selected-testnet');
+    if (v === val) {
+      if (val === 'mainnet') label.classList.add('selected-mainnet');
+      if (val === 'testnet') label.classList.add('selected-testnet');
+    }
+  });
+  // Ustaw radio
+  const radioId = val === '' ? 'radio-none-net' : `radio-${val}`;
+  const radio = document.getElementById(radioId);
+  if (radio) radio.checked = true;
+}
 
 function addLinkRow() {
   const div = document.createElement('div'); div.className = 'link-row';
@@ -1196,10 +1384,12 @@ async function saveNewProject() {
     const linkName = row.querySelector('.link-name').value.trim();
     if (url) links.push({ id: genId(), url, name: linkName });
   });
+  const network = document.querySelector('input[name="new-project-network"]:checked')?.value || '';
   const p = {
     id: genId(), name, links,
     notes: document.getElementById('new-project-notes').value,
     starred: false,
+    network,
     socialX: document.getElementById('new-project-x').value.trim(),
     socialDiscord: document.getElementById('new-project-discord').value.trim(),
     createdAt: Date.now(),
@@ -1258,8 +1448,9 @@ function startEditName(id) {
 
 function openAddLink(projectId) {
   document.getElementById('add-link-project-id').value = projectId;
-  document.getElementById('add-link-url').value = '';
+  document.getElementById('add-link-url').value  = '';
   document.getElementById('add-link-name').value = '';
+  document.getElementById('add-link-note').value = '';
   openModal('modal-add-link');
 }
 
@@ -1267,14 +1458,41 @@ async function saveNewLink() {
   const projectId = document.getElementById('add-link-project-id').value;
   const url  = document.getElementById('add-link-url').value.trim();
   const name = document.getElementById('add-link-name').value.trim();
+  const note = document.getElementById('add-link-note').value.trim();
   if (!url) { alert('Wpisz URL!'); return; }
   const proj = projects.find(p => p.id === projectId);
   if (!proj) return;
   proj.links = proj.links || [];
-  proj.links.push({ id: genId(), url, name });
+  proj.links.push({ id: genId(), url, name, note });
   await saveProject(proj);
   closeModal('modal-add-link');
   showToast('✓ Link dodany!');
+}
+
+function editLinkNote(projectId, linkId) {
+  const proj = projects.find(p => p.id === projectId);
+  if (!proj) return;
+  const link = (proj.links||[]).find(l => l.id === linkId);
+  if (!link) return;
+  document.getElementById('edit-note-project-id').value = projectId;
+  document.getElementById('edit-note-link-id').value    = linkId;
+  document.getElementById('edit-note-link-url').textContent = link.name || link.url;
+  document.getElementById('edit-note-value').value      = link.note || '';
+  openModal('modal-edit-link-note');
+}
+
+async function saveLinkNote() {
+  const projectId = document.getElementById('edit-note-project-id').value;
+  const linkId    = document.getElementById('edit-note-link-id').value;
+  const note      = document.getElementById('edit-note-value').value.trim();
+  const proj = projects.find(p => p.id === projectId);
+  if (!proj) return;
+  const link = (proj.links||[]).find(l => l.id === linkId);
+  if (!link) return;
+  link.note = note;
+  await saveProject(proj);
+  closeModal('modal-edit-link-note');
+  showToast('✓ Notatka zapisana!');
 }
 
 async function deleteLinkFromProject(projectId, linkId) {
@@ -1564,6 +1782,7 @@ function addAddrRow() {
   const div = document.createElement('div'); div.className = 'addr-row-form';
   div.innerHTML = `<input type="text" class="form-input" placeholder="Sieć (np. ETH)">
     <input type="text" class="form-input" placeholder="0x... lub adres">
+    <input type="text" class="form-input" placeholder="Notatka (opcjonalna)" style="font-size:12px;color:var(--text-muted)">
     <button class="btn-icon" onclick="removeAddrRow(this)" style="color:var(--red);margin-top:2px">✕</button>`;
   document.getElementById('new-wallet-addresses').appendChild(div);
 }
@@ -1586,6 +1805,7 @@ function openAddWallet() {
     <div class="addr-row-form">
       <input type="text" class="form-input" placeholder="Sieć (np. ETH)">
       <input type="text" class="form-input" placeholder="0x... lub adres portfela">
+      <input type="text" class="form-input" placeholder="Notatka (opcjonalna)" style="font-size:12px;color:var(--text-muted)">
       <button class="btn-icon" onclick="removeAddrRow(this)" style="color:var(--red);margin-top:2px">✕</button>
     </div>`;
   openModal('modal-add-wallet');
@@ -1604,11 +1824,13 @@ function editWallet(id) {
     ? (w.addresses||[]).map(a => `<div class="addr-row-form">
         <input type="text" class="form-input" placeholder="Sieć" value="${esc(a.chain)}">
         <input type="text" class="form-input" placeholder="Adres" value="${esc(a.addr)}">
+        <input type="text" class="form-input" placeholder="Notatka" value="${esc(a.note||'')}" style="font-size:12px;color:var(--text-muted)">
         <button class="btn-icon" onclick="removeAddrRow(this)" style="color:var(--red);margin-top:2px">✕</button>
       </div>`).join('')
     : `<div class="addr-row-form">
         <input type="text" class="form-input" placeholder="Sieć (np. ETH)">
         <input type="text" class="form-input" placeholder="0x...">
+        <input type="text" class="form-input" placeholder="Notatka (opcjonalna)" style="font-size:12px;color:var(--text-muted)">
         <button class="btn-icon" onclick="removeAddrRow(this)" style="color:var(--red);margin-top:2px">✕</button>
       </div>`;
   openModal('modal-add-wallet');
@@ -1622,8 +1844,8 @@ async function saveWalletForm() {
   const addresses = [];
   document.querySelectorAll('#new-wallet-addresses .addr-row-form').forEach(row => {
     const inputs = row.querySelectorAll('input');
-    const chain = inputs[0].value.trim(), addr = inputs[1].value.trim();
-    if (addr) addresses.push({ id: genId(), chain, addr });
+    const chain = inputs[0].value.trim(), addr = inputs[1].value.trim(), note = inputs[2]?.value.trim() || '';
+    if (addr) addresses.push({ id: genId(), chain, addr, note });
   });
   const editId = document.getElementById('edit-wallet-id').value;
   const w = editId
@@ -1673,7 +1895,9 @@ function renderWallets() {
                 <div class="address-value" title="${esc(a.addr)}">${esc(a.addr)}</div>
                 <button class="link-copy-btn" onclick="copyLink('${esc(a.addr)}')">📋</button>
                 <button class="link-delete-btn" onclick="deleteAddress('${w.id}','${a.id}')">✕</button>
-              </div></div>`).join('')}
+              </div>
+              ${a.note ? `<div class="address-note">💬 ${esc(a.note)}</div>` : ''}
+            </div>`).join('')}
       </div>
       <div class="wallet-footer">
         <span style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted);flex:1">${(w.addresses||[]).length} adresów</span>
@@ -1831,6 +2055,61 @@ function exportProjects() {
   const a = document.createElement('a'); a.href=url; a.download=`todocrypto-backup-${new Date().toISOString().slice(0,10)}.json`; a.click();
   URL.revokeObjectURL(url);
   showToast(`✓ Eksportowano ${projects.length} projektów!`);
+}
+
+/* ============================================
+   SCRATCH PAD — szybki notatnik
+============================================ */
+let scratchSaveTimer;
+let scratchLoaded = false;
+
+async function initScratchPad() {
+  if (scratchLoaded) return; // już załadowany
+  const ta = document.getElementById('scratchpad');
+  const status = document.getElementById('scratchpad-status');
+  if (!ta) return;
+
+  status.textContent = 'ładowanie...';
+  try {
+    const doc = await db.collection('users').doc(currentUser.uid)
+      .collection('scratch').doc('pad').get();
+    ta.value = doc.exists ? (doc.data().content || '') : '';
+    status.textContent = 'gotowy';
+    scratchLoaded = true;
+  } catch(e) {
+    status.textContent = 'błąd ładowania';
+  }
+
+  // Autosave przy każdej zmianie (debounce 1.5s)
+  ta.addEventListener('input', () => {
+    const status = document.getElementById('scratchpad-status');
+    status.textContent = 'zapisywanie...';
+    status.classList.remove('saved');
+    clearTimeout(scratchSaveTimer);
+    scratchSaveTimer = setTimeout(async () => {
+      try {
+        await db.collection('users').doc(currentUser.uid)
+          .collection('scratch').doc('pad').set({ content: ta.value, updatedAt: Date.now() });
+        status.textContent = '✓ zapisano';
+        status.classList.add('saved');
+        setTimeout(() => { status.textContent = 'gotowy'; status.classList.remove('saved'); }, 2000);
+      } catch(e) { status.textContent = '✗ błąd zapisu'; }
+    }, 1500);
+  });
+}
+
+function clearScratchPad() {
+  if (!confirm('Wyczyścić notatnik? Tej akcji nie można cofnąć.')) return;
+  const ta = document.getElementById('scratchpad');
+  ta.value = '';
+  ta.dispatchEvent(new Event('input')); // uruchom autosave
+  showToast('🗑 Notatnik wyczyszczony');
+}
+
+function copyScratchPad() {
+  const ta = document.getElementById('scratchpad');
+  if (!ta.value.trim()) { showToast('⚠️ Notatnik jest pusty'); return; }
+  copyLink(ta.value);
 }
 
 /* ============================================
