@@ -201,8 +201,8 @@ main{max-width:1400px;margin:0 auto;padding:24px 20px}
 .days-badge{font-family:var(--font-mono);font-size:10px;padding:2px 7px;border-radius:10px;background:var(--bg3);border:1px solid var(--border);color:var(--text-muted);white-space:nowrap;flex-shrink:0}
 .days-badge.new-proj{border-color:rgba(57,255,110,0.3);color:var(--green);background:rgba(57,255,110,0.06)}
 .days-badge.week-proj{border-color:rgba(245,230,66,0.3);color:var(--yellow);background:rgba(245,230,66,0.06)}
-.card-body{display:grid;grid-template-columns:2fr 1fr;gap:0}
-@media(max-width:900px){.card-body{grid-template-columns:1fr}}
+.card-body{display:grid;grid-template-columns:1fr 1fr;gap:0}
+@media(max-width:700px){.card-body{grid-template-columns:1fr}}
 .card-section{padding:14px 18px;border-right:1px solid var(--border)}
 .card-section:last-child{border-right:none}
 @media(max-width:900px){.card-section{border-right:none;border-bottom:1px solid var(--border)}.card-section:last-child{border-bottom:none}}
@@ -1299,7 +1299,7 @@ function renderCard(p) {
     <button class="btn-icon ${p.starred?'starred':''}" onclick="toggleStar('${p.id}')">⭐</button>
   </div>
   <div class="card-body">
-    <div class="card-section" style="grid-column:1/3">
+    <div class="card-section">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:10px;flex-wrap:wrap">
         <div class="section-title" style="margin-bottom:0">🔗 Linki</div>
         ${linkCount > 0 ? `<button class="btn btn-secondary" style="font-size:12px;padding:5px 14px" onclick="openAllLinks('${p.id}')">🌐 Otwórz wszystkie</button>` : ''}
