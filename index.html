@@ -402,13 +402,30 @@ main{max-width:1400px;margin:0 auto;padding:24px 20px}
 .link-item-wrap:hover{border-color:var(--border-glow)}
 .link-item{background:transparent;border:none;border-radius:0;padding:6px 10px}
 .link-item:hover{border-color:transparent}
-</style>
-<style>
+/* WALLET ADDRESS NOTES */
 .address-note{font-family:var(--font-mono);font-size:11px;color:var(--text-muted);margin-top:3px;font-style:italic;line-height:1.4;word-break:break-word}
 .addr-note-input{width:100%;background:transparent;border:none;border-top:1px dashed var(--border);color:var(--text-muted);font-family:var(--font-mono);font-size:11px;padding:4px 0 0;margin-top:4px;outline:none;transition:color 0.15s}
 .addr-note-input:focus{color:var(--text);border-color:var(--yellow-dim)}
 .addr-note-input::placeholder{color:var(--text-muted);opacity:0.6}
-</style>bottom:24px;right:24px;background:var(--card);border:1px solid var(--green);border-radius:var(--radius);color:var(--green);font-family:var(--font-mono);font-size:13px;padding:12px 20px;box-shadow:var(--shadow-green);z-index:2000;transform:translateY(100px);opacity:0;transition:all 0.3s;pointer-events:none}
+/* DAILY STATS */
+.daily-stat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px 18px;display:flex;flex-direction:column;gap:4px;transition:border-color 0.2s;position:relative;overflow:hidden}
+.daily-stat-card:hover{border-color:var(--border-glow)}
+.daily-stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.daily-stat-card.c-yellow::before{background:var(--yellow)}
+.daily-stat-card.c-green::before{background:var(--green)}
+.daily-stat-card.c-cyan::before{background:var(--cyan)}
+.daily-stat-card.c-red::before{background:var(--red)}
+.daily-stat-card.c-purple::before{background:#a78bfa}
+.daily-stat-val{font-family:var(--font-mono);font-size:28px;font-weight:700;line-height:1}
+.daily-stat-val.c-yellow{color:var(--yellow);text-shadow:var(--shadow-yellow)}
+.daily-stat-val.c-green{color:var(--green);text-shadow:var(--shadow-green)}
+.daily-stat-val.c-cyan{color:var(--cyan);text-shadow:var(--shadow-cyan)}
+.daily-stat-val.c-red{color:var(--red)}
+.daily-stat-val.c-purple{color:#a78bfa}
+.daily-stat-lbl{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted)}
+.daily-stat-sub{font-family:var(--font-mono);font-size:10px;color:var(--text-muted);margin-top:2px}
+/* TOAST */
+#toast{position:fixed;bottom:24px;right:24px;background:var(--card);border:1px solid var(--green);border-radius:var(--radius);color:var(--green);font-family:var(--font-mono);font-size:13px;padding:12px 20px;box-shadow:var(--shadow-green);z-index:2000;transform:translateY(100px);opacity:0;transition:all 0.3s;pointer-events:none}
 #toast.show{transform:translateY(0);opacity:1}
 .browser-toast{position:fixed;top:80px;left:50%;transform:translateX(-50%) scale(0.9);background:var(--card2);border:1px solid var(--yellow-dim);border-radius:var(--radius-lg);padding:16px 24px;font-family:var(--font-mono);font-size:14px;color:var(--yellow);text-align:center;box-shadow:var(--shadow-yellow);z-index:2000;opacity:0;pointer-events:none;transition:all 0.3s;max-width:400px;width:90%}
 .browser-toast.show{opacity:1;transform:translateX(-50%) scale(1)}
@@ -514,6 +531,8 @@ main{max-width:1400px;margin:0 auto;padding:24px 20px}
         <button class="btn btn-primary" onclick="openModal('modal-add-task')">+ Dodaj zadanie</button>
       </div>
     </div>
+    <!-- Statystyki daily -->
+    <div id="daily-stats-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-bottom:20px"></div>
     <div class="progress-wrap"><div class="progress-bar" id="daily-progress-bar"></div></div>
     <div class="progress-label" id="daily-progress-label"></div>
     <div class="tasks-grid" id="tasks-grid"></div>
@@ -1590,11 +1609,69 @@ function renderDailyDateLabel() {
 
 function renderDailyTasks() {
   renderDailyDateLabel();
-  const total = tasks.length, done = tasks.filter(t => isTaskDoneToday(t.id)).length;
-  const pct = total ? Math.round(done/total*100) : 0;
+  const total  = tasks.length;
+  const done   = tasks.filter(t => isTaskDoneToday(t.id)).length;
+  const pct    = total ? Math.round(done / total * 100) : 0;
+  const remain = total - done;
+
+  // Statystyki per kategoria
+  const cats = { defi:0, check:0, social:0, security:0, other:0 };
+  const catsDone = { defi:0, check:0, social:0, security:0, other:0 };
+  tasks.forEach(t => {
+    const c = t.cat || 'defi';
+    cats[c] = (cats[c]||0) + 1;
+    if (isTaskDoneToday(t.id)) catsDone[c] = (catsDone[c]||0) + 1;
+  });
+
+  // Streak — ile dni z rzędu były zadania ukończone (z localStorage)
+  const streakKey = 'streak_' + currentUser.uid;
+  const streakData = JSON.parse(localStorage.getItem(streakKey) || '{"days":0,"lastDate":""}');
+  let streak = streakData.days;
+  const todayS = todayStr();
+  if (pct === 100 && total > 0 && streakData.lastDate !== todayS) {
+    // Aktualizuj streak gdy wszystko ukończone
+    const yesterday = new Date(); yesterday.setDate(yesterday.getDate()-1);
+    const yStr = yesterday.toISOString().slice(0,10);
+    streak = streakData.lastDate === yStr ? streakData.days + 1 : 1;
+    localStorage.setItem(streakKey, JSON.stringify({days: streak, lastDate: todayS}));
+  }
+
+  // Render kart statystyk
+  const statsGrid = document.getElementById('daily-stats-grid');
+  if (statsGrid) {
+    const catLabels = {defi:'DeFi', check:'Sprawdzenie', social:'Social', security:'Bezp.', other:'Inne'};
+    const topCat = Object.entries(cats).sort((a,b)=>b[1]-a[1])[0];
+    statsGrid.innerHTML = `
+      <div class="daily-stat-card c-yellow">
+        <div class="daily-stat-val c-yellow">${done}<span style="font-size:14px;color:var(--text-muted)">/${total}</span></div>
+        <div class="daily-stat-lbl">Ukończone dziś</div>
+        <div class="daily-stat-sub">${pct}% wykonania</div>
+      </div>
+      <div class="daily-stat-card c-${remain === 0 && total > 0 ? 'green' : 'cyan'}">
+        <div class="daily-stat-val c-${remain === 0 && total > 0 ? 'green' : 'cyan'}">${remain === 0 && total > 0 ? '✓' : remain}</div>
+        <div class="daily-stat-lbl">${remain === 0 && total > 0 ? 'Wszystko gotowe!' : 'Pozostało'}</div>
+        <div class="daily-stat-sub">${remain === 0 && total > 0 ? 'Świetna robota! 🎉' : `zadań do zrobienia`}</div>
+      </div>
+      <div class="daily-stat-card c-purple">
+        <div class="daily-stat-val c-purple">${streak > 0 ? '🔥' : '—'} ${streak}</div>
+        <div class="daily-stat-lbl">Passa dni</div>
+        <div class="daily-stat-sub">${streak >= 7 ? '🏆 Tydzień z rzędu!' : streak > 0 ? 'dni z rzędu' : 'zacznij passę!'}</div>
+      </div>
+      <div class="daily-stat-card c-cyan">
+        <div class="daily-stat-val c-cyan">${total}</div>
+        <div class="daily-stat-lbl">Wszystkich zadań</div>
+        <div class="daily-stat-sub">
+          ${Object.entries(cats).filter(([,v])=>v>0).map(([k,v])=>`${catLabels[k]}: ${catsDone[k]||0}/${v}`).join(' · ') || 'brak zadań'}
+        </div>
+      </div>`;
+  }
+
+  // Progress bar
   document.getElementById('daily-progress-bar').style.width = pct + '%';
-  document.getElementById('daily-progress-label').textContent = total ? `${done} / ${total} ukończonych (${pct}%)` : 'Brak zadań — dodaj pierwsze!';
-  const catLabels = { defi:'DeFi', check:'Sprawdzenie', social:'Social', security:'Bezpieczeństwo', other:'Inne' };
+  document.getElementById('daily-progress-label').textContent = total
+    ? `${done} / ${total} ukończonych (${pct}%)`
+    : 'Brak zadań — dodaj pierwsze!';
+
   const grid = document.getElementById('tasks-grid');
   if (!tasks.length) {
     grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--text-muted)">
@@ -1603,12 +1680,14 @@ function renderDailyTasks() {
       <button class="btn btn-primary" onclick="openModal('modal-add-task')">+ Dodaj pierwsze zadanie</button></div>`;
     return;
   }
+
+  const catLabels2 = { defi:'DeFi', check:'Sprawdzenie', social:'Social', security:'Bezpieczeństwo', other:'Inne' };
   grid.innerHTML = tasks.map(t => {
     const isDone = isTaskDoneToday(t.id);
     return `<div class="task-item ${isDone?'done':''}" onclick="toggleTask('${t.id}')">
       <div class="task-checkbox">${isDone?'✓':''}</div>
       <div class="task-text">${esc(t.text)}</div>
-      <span class="task-category cat-${t.cat||'defi'}">${catLabels[t.cat]||t.cat}</span>
+      <span class="task-category cat-${t.cat||'defi'}">${catLabels2[t.cat]||t.cat}</span>
       <button class="btn-icon" onclick="delTask(event,'${t.id}')">🗑</button></div>`;
   }).join('');
 }
