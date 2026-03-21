@@ -188,19 +188,28 @@ main{max-width:1400px;margin:0 auto;padding:24px 20px}
 .project-card:hover{border-color:var(--border-glow);transform:translateY(-2px);box-shadow:0 8px 40px rgba(0,0,0,0.4)}
 .project-card.starred{border-color:rgba(245,230,66,0.4)}
 .project-card.starred::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--yellow),transparent)}
-.card-header{display:flex;align-items:center;gap:10px;padding:14px 18px 12px;border-bottom:1px solid var(--border);background:var(--card2);flex-wrap:wrap}
-.project-name-wrap{flex:1;display:flex;align-items:center;gap:6px;min-width:0}
-.project-name{font-size:17px;font-weight:700;letter-spacing:0.5px;color:var(--text)}
+.card-header{display:flex;align-items:center;gap:8px;padding:12px 16px;border-bottom:1px solid var(--border);background:var(--card2);flex-wrap:wrap}
+.project-name-wrap{flex:1 1 auto;display:flex;align-items:center;gap:6px;min-width:0;min-width:120px}
+.project-name{font-size:17px;font-weight:700;letter-spacing:0.5px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .project-name-edit-btn{background:transparent;border:none;color:var(--text-muted);cursor:pointer;font-size:12px;padding:2px 4px;border-radius:4px;opacity:0;transition:opacity 0.15s,color 0.15s;flex-shrink:0}
 .card-header:hover .project-name-edit-btn{opacity:1}
 .project-name-edit-btn:hover{color:var(--yellow);background:rgba(245,230,66,0.1)}
 .project-name-input{flex:1;background:var(--bg3);border:1px solid var(--yellow-dim);border-radius:var(--radius);color:var(--text);font-family:var(--font-main);font-size:16px;font-weight:700;padding:3px 8px;outline:none;min-width:0}
-.project-badges{display:flex;align-items:center;gap:6px}
+.project-badges{display:flex;align-items:center;gap:5px;flex-shrink:0;flex-wrap:wrap}
 .badge{background:var(--bg3);border:1px solid var(--border);border-radius:20px;color:var(--text-muted);font-family:var(--font-mono);font-size:11px;padding:2px 10px}
 .badge.green{border-color:rgba(57,255,110,0.3);color:var(--green)}
 .days-badge{font-family:var(--font-mono);font-size:10px;padding:2px 7px;border-radius:10px;background:var(--bg3);border:1px solid var(--border);color:var(--text-muted);white-space:nowrap;flex-shrink:0}
 .days-badge.new-proj{border-color:rgba(57,255,110,0.3);color:var(--green);background:rgba(57,255,110,0.06)}
 .days-badge.week-proj{border-color:rgba(245,230,66,0.3);color:var(--yellow);background:rgba(245,230,66,0.06)}
+/* MOBILE: nazwa na górze, reszta zawijała się pod */
+@media(max-width:640px){
+  .card-header{row-gap:8px}
+  .drag-handle{order:0;flex-shrink:0}
+  .project-name-wrap{order:1;flex:1 1 160px;min-width:0}
+  .btn-icon.starred,.btn-icon:not(.project-name-edit-btn){order:2;flex-shrink:0}
+  .project-badges{order:3;width:100%;flex-wrap:wrap}
+  .card-social{order:4;width:100%}
+}
 .card-body{display:grid;grid-template-columns:1fr 1fr;gap:0}
 @media(max-width:700px){.card-body{grid-template-columns:1fr}}
 .card-section{padding:14px 18px;border-right:1px solid var(--border)}
@@ -407,6 +416,38 @@ main{max-width:1400px;margin:0 auto;padding:24px 20px}
 .addr-note-input{width:100%;background:transparent;border:none;border-top:1px dashed var(--border);color:var(--text-muted);font-family:var(--font-mono);font-size:11px;padding:4px 0 0;margin-top:4px;outline:none;transition:color 0.15s}
 .addr-note-input:focus{color:var(--text);border-color:var(--yellow-dim)}
 .addr-note-input::placeholder{color:var(--text-muted);opacity:0.6}
+/* WHITELIST / WAITLIST */
+.wl-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;transition:all 0.2s;position:relative;animation:fadeIn 0.3s ease}
+.wl-card:hover{border-color:var(--border-glow);transform:translateY(-2px);box-shadow:0 8px 30px rgba(0,0,0,0.3)}
+.wl-card.status-won{border-color:rgba(245,230,66,0.4)}
+.wl-card.status-won::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--yellow)}
+.wl-card.status-lost{opacity:0.6}
+.wl-card.status-active{border-color:rgba(57,255,110,0.25)}
+.wl-card.status-active::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--green)}
+.wl-card-header{display:flex;align-items:center;gap:10px;padding:13px 16px;background:var(--card2);border-bottom:1px solid var(--border)}
+.wl-card-name{flex:1;font-size:16px;font-weight:700}
+.wl-status-badge{font-family:var(--font-mono);font-size:10px;padding:2px 8px;border-radius:10px;border:1px solid;white-space:nowrap;font-weight:700}
+.wl-s-active{color:var(--green);border-color:rgba(57,255,110,0.4);background:rgba(57,255,110,0.08)}
+.wl-s-won{color:var(--yellow);border-color:rgba(245,230,66,0.4);background:rgba(245,230,66,0.08)}
+.wl-s-lost{color:var(--text-muted);border-color:var(--border);background:var(--bg3)}
+.wl-s-pending{color:var(--cyan);border-color:rgba(0,212,255,0.3);background:rgba(0,212,255,0.06)}
+.wl-priority{font-size:11px;padding:2px 7px;border-radius:10px;font-family:var(--font-mono)}
+.wl-p-high{color:var(--red);background:rgba(255,56,100,0.08);border:1px solid rgba(255,56,100,0.3)}
+.wl-p-mid{color:var(--yellow);background:rgba(245,230,66,0.06);border:1px solid rgba(245,230,66,0.25)}
+.wl-p-low{color:var(--green);background:rgba(57,255,110,0.06);border:1px solid rgba(57,255,110,0.2)}
+.wl-card-body{padding:12px 16px;display:flex;flex-direction:column;gap:8px}
+.wl-row{display:flex;align-items:center;gap:8px;font-size:13px}
+.wl-row-label{font-family:var(--font-mono);font-size:10px;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;min-width:60px;flex-shrink:0}
+.wl-methods{display:flex;gap:5px;flex-wrap:wrap}
+.wl-method-tag{font-family:var(--font-mono);font-size:10px;padding:2px 7px;border-radius:6px;background:var(--bg3);border:1px solid var(--border);color:var(--text-dim)}
+.wl-note-text{font-size:12px;color:var(--text-muted);font-style:italic;line-height:1.5;border-top:1px dashed var(--border);padding-top:8px;margin-top:2px}
+.wl-card-footer{display:flex;align-items:center;justify-content:space-between;padding:9px 16px;border-top:1px solid var(--border);background:var(--card2)}
+.wl-date{font-family:var(--font-mono);font-size:10px;color:var(--text-muted)}
+/* WL method checkboxes in modal */
+.wl-method-label{display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;font-weight:600;padding:7px 12px;border:1px solid var(--border);border-radius:var(--radius);transition:all 0.15s;color:var(--text-dim);background:var(--bg3);user-select:none}
+.wl-method-label:hover{border-color:var(--border-glow)}
+.wl-method-label input{display:none}
+.wl-method-label.checked{border-color:var(--cyan);color:var(--cyan);background:rgba(0,212,255,0.06)}
 /* DAILY STATS */
 .daily-stat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px 18px;display:flex;flex-direction:column;gap:4px;transition:border-color 0.2s;position:relative;overflow:hidden}
 .daily-stat-card:hover{border-color:var(--border-glow)}
@@ -487,6 +528,7 @@ main{max-width:1400px;margin:0 auto;padding:24px 20px}
   <button class="tab-btn" data-tab="daily" onclick="switchTab('daily')">📋 Daily Tasks</button>
   <button class="tab-btn" id="tab-alerts-btn" data-tab="alerts" onclick="switchTab('alerts')">🔔 Alerty</button>
   <button class="tab-btn" data-tab="wallets" onclick="switchTab('wallets')">👛 Portfele</button>
+  <button class="tab-btn" data-tab="wl" onclick="switchTab('wl')">🎯 Whitelist</button>
   <button class="tab-btn" data-tab="scratch" onclick="switchTab('scratch')">📝 Notatnik</button>
 </nav>
 
@@ -590,6 +632,46 @@ main{max-width:1400px;margin:0 auto;padding:24px 20px}
     ></textarea>
     <div class="scratchpad-status" id="scratchpad-status">gotowy</div>
   </div>
+  <!-- WHITELIST / WAITLIST -->
+  <div class="tab-panel" id="tab-wl">
+    <!-- Header + statystyki -->
+    <div class="daily-header">
+      <div>
+        <h2 style="font-size:20px;font-weight:700;margin-bottom:4px">🎯 Whitelist / Waitlist</h2>
+        <div class="daily-date">Twoje zapisy na WL i waitlisty projektów</div>
+      </div>
+      <button class="btn btn-primary" onclick="openModal('modal-add-wl')">+ Dodaj WL</button>
+    </div>
+
+    <!-- Statystyki WL -->
+    <div id="wl-stats" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-bottom:20px"></div>
+
+    <!-- Wyszukiwarka + filtry -->
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;align-items:center">
+      <div class="search-wrap" style="flex:1;min-width:200px">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="wl-search" placeholder="szukaj projektu WL..." style="width:100%" oninput="renderWL()">
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="net-filter-btn active-all" data-wlf="all"      onclick="setWLFilter('all')">Wszystkie</button>
+        <button class="net-filter-btn"            data-wlf="active"   onclick="setWLFilter('active')">🟢 Aktywne</button>
+        <button class="net-filter-btn"            data-wlf="won"      onclick="setWLFilter('won')">🏆 Wygrałem</button>
+        <button class="net-filter-btn"            data-wlf="lost"     onclick="setWLFilter('lost')">❌ Nie dostałem</button>
+        <button class="net-filter-btn"            data-wlf="pending"  onclick="setWLFilter('pending')">⏳ Oczekuję</button>
+      </div>
+      <div style="display:flex;gap:6px">
+        <select id="wl-sort" class="form-input" style="padding:6px 10px;font-size:13px;width:auto" onchange="renderWL()">
+          <option value="date_desc">Najnowsze</option>
+          <option value="date_asc">Najstarsze</option>
+          <option value="name_asc">A → Z</option>
+          <option value="accounts_desc">Najwięcej kont</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Siatka kart WL -->
+    <div id="wl-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px"></div>
+  </div>
 
 </main>
 </div><!-- /#app-wrapper -->
@@ -597,6 +679,91 @@ main{max-width:1400px;margin:0 auto;padding:24px 20px}
 <!-- TOAST -->
 <div id="toast"></div>
 <div class="browser-toast" id="browser-toast"></div>
+
+<!-- MODAL: Dodaj / Edytuj WL -->
+<div class="modal-overlay" id="modal-add-wl">
+  <div class="modal" style="max-width:540px">
+    <div class="modal-header">
+      <div class="modal-title" id="wl-modal-title">// NOWY WHITELIST</div>
+      <button class="modal-close" onclick="closeModal('modal-add-wl')">✕</button>
+    </div>
+    <input type="hidden" id="edit-wl-id">
+
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <div class="form-group" style="flex:1;min-width:180px">
+        <label class="form-label">Nazwa projektu *</label>
+        <input type="text" class="form-input" id="wl-name" placeholder="np. Citrea, Plume, Ink...">
+      </div>
+      <div class="form-group" style="flex:0 0 140px">
+        <label class="form-label">Status</label>
+        <select class="form-input" id="wl-status">
+          <option value="active">🟢 Aktywne</option>
+          <option value="pending">⏳ Oczekuję</option>
+          <option value="won">🏆 Wygrałem</option>
+          <option value="lost">❌ Nie dostałem</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Link do WL / Waitlisty</label>
+      <input type="text" class="form-input" id="wl-url" placeholder="https://...">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Sposób zapisu (zaznacz wszystkie które dotyczą)</label>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">
+        <label class="wl-method-label" id="wlm-wallet">
+          <input type="checkbox" value="wallet" class="wl-method-cb"> 👛 Wallet
+        </label>
+        <label class="wl-method-label" id="wlm-twitter">
+          <input type="checkbox" value="twitter" class="wl-method-cb"> 𝕏 Twitter
+        </label>
+        <label class="wl-method-label" id="wlm-email">
+          <input type="checkbox" value="email" class="wl-method-cb"> 📧 Email
+        </label>
+        <label class="wl-method-label" id="wlm-discord">
+          <input type="checkbox" value="discord" class="wl-method-cb"> 💬 Discord
+        </label>
+        <label class="wl-method-label" id="wlm-telegram">
+          <input type="checkbox" value="telegram" class="wl-method-cb"> ✈️ Telegram
+        </label>
+        <label class="wl-method-label" id="wlm-other">
+          <input type="checkbox" value="other" class="wl-method-cb"> 🔗 Inne
+        </label>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <div class="form-group" style="flex:1;min-width:120px">
+        <label class="form-label">Liczba kont</label>
+        <input type="number" class="form-input" id="wl-accounts" min="1" max="99" value="1" placeholder="1">
+      </div>
+      <div class="form-group" style="flex:1;min-width:120px">
+        <label class="form-label">Data zapisu</label>
+        <input type="date" class="form-input" id="wl-date">
+      </div>
+      <div class="form-group" style="flex:1;min-width:120px">
+        <label class="form-label">Priorytet</label>
+        <select class="form-input" id="wl-priority">
+          <option value="high">🔴 Wysoki</option>
+          <option value="mid" selected>🟡 Średni</option>
+          <option value="low">🟢 Niski</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Notatka</label>
+      <textarea class="form-textarea" id="wl-note" placeholder="np. wymogi, co trzeba zrobić, kiedy mint, szczegóły..." style="min-height:70px"></textarea>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-add-wl')">Anuluj</button>
+      <button class="btn btn-primary" onclick="saveWLEntry()">Zapisz</button>
+    </div>
+  </div>
+</div>
 
 <!-- MODALS -->
 
@@ -1017,6 +1184,9 @@ function initApp() {
     }, () => { wallets = []; })
   );
 
+  // Inicjuj listener WL
+  initWLListener();
+
   // Wczytaj taskDone z localStorage (per user)
   taskDone = JSON.parse(localStorage.getItem('taskdone_' + currentUser.uid) || '{}');
 
@@ -1121,6 +1291,7 @@ function switchTab(tab) {
   if (tab === 'daily')   renderDailyTasks();
   if (tab === 'alerts')  renderAlerts();
   if (tab === 'wallets') renderWallets();
+  if (tab === 'wl')      renderWL();
   if (tab === 'scratch') initScratchPad();
 }
 
@@ -1142,6 +1313,7 @@ function setView(v) {
 function openModal(id) {
   document.getElementById(id).classList.add('open');
   if (id === 'modal-import') { updateFormatExample(); clearImportPreview(); }
+  if (id === 'modal-add-wl') openModal_wl_reset();
   if (id === 'modal-add-alert') {
     document.getElementById('edit-alert-id').value = '';
     document.getElementById('alert-modal-title').textContent = '// NOWY ALERT';
@@ -2005,15 +2177,20 @@ function exportWallets() {
 const JSON_EXAMPLE = `[
   {
     "name": "UniSwap",
-    "links": [{"url":"https://app.uniswap.org","name":"Aplikacja"}],
+    "network": "mainnet",
+    "links": [
+      { "url": "https://app.uniswap.org", "name": "Aplikacja", "note": "główna apka" },
+      { "url": "https://docs.uniswap.org", "name": "Dokumentacja", "note": "" }
+    ],
     "notes": "DEX na Ethereum",
     "starred": true,
     "socialX": "https://x.com/Uniswap",
     "socialDiscord": "https://discord.gg/uniswap"
   }
 ]`;
-const CSV_EXAMPLE = `name,url,link_name,notes,starred,socialX,socialDiscord
-UniSwap,https://app.uniswap.org,Aplikacja,DEX na Ethereum,true,https://x.com/Uniswap,https://discord.gg/uniswap`;
+const CSV_EXAMPLE = `name,network,url,link_name,link_note,notes,starred,socialX,socialDiscord
+UniSwap,mainnet,https://app.uniswap.org,Aplikacja,główna apka,DEX na Ethereum,true,https://x.com/Uniswap,https://discord.gg/uniswap
+UniSwap,mainnet,https://docs.uniswap.org,Dokumentacja,,,,, `;
 
 let importTab = 'json';
 let importedProjects = [];
@@ -2060,26 +2237,69 @@ function parseJSON(text) {
   if (!Array.isArray(data)) throw new Error('JSON musi być tablicą []');
   return data.map((p,i) => {
     if (!p.name) throw new Error(`Projekt #${i+1} bez pola "name"`);
-    return { id:genId(), name:String(p.name), links:Array.isArray(p.links)?p.links.filter(l=>l.url).map(l=>({id:genId(),url:String(l.url),name:String(l.name||'')})):[],
-      notes:String(p.notes||''), starred:!!p.starred, socialX:String(p.socialX||''), socialDiscord:String(p.socialDiscord||''), createdAt:Date.now(), order:Date.now() };
+    return {
+      id: genId(), name: String(p.name),
+      links: Array.isArray(p.links)
+        ? p.links.filter(l => l.url).map(l => ({
+            id: genId(),
+            url: String(l.url),
+            name: String(l.name || ''),
+            note: String(l.note || '')
+          }))
+        : [],
+      notes: String(p.notes || ''),
+      starred: !!p.starred,
+      network: String(p.network || ''),
+      socialX: String(p.socialX || ''),
+      socialDiscord: String(p.socialDiscord || ''),
+      createdAt: Date.now(), order: Date.now()
+    };
   });
 }
 
 function parseCSV(text) {
   const lines = text.trim().split(/\r?\n/);
   if (lines.length < 2) throw new Error('Plik CSV pusty');
-  const headers = splitCSVLine(lines[0]).map(h=>h.trim().toLowerCase());
-  const idx = { name:headers.indexOf('name'), url:headers.indexOf('url'), link_name:headers.indexOf('link_name'), notes:headers.indexOf('notes'), starred:headers.indexOf('starred'), socialX:headers.indexOf('socialx'), socialDiscord:headers.indexOf('socialdiscord') };
-  if (idx.name===-1) throw new Error('Brak kolumny "name"');
-  if (idx.url===-1) throw new Error('Brak kolumny "url"');
+  const headers = splitCSVLine(lines[0]).map(h => h.trim().toLowerCase());
+  const idx = {
+    name:          headers.indexOf('name'),
+    url:           headers.indexOf('url'),
+    link_name:     headers.indexOf('link_name'),
+    link_note:     headers.indexOf('link_note'),
+    notes:         headers.indexOf('notes'),
+    starred:       headers.indexOf('starred'),
+    network:       headers.indexOf('network'),
+    socialX:       headers.indexOf('socialx'),
+    socialDiscord: headers.indexOf('socialdiscord'),
+  };
+  if (idx.name === -1) throw new Error('Brak kolumny "name"');
+  if (idx.url  === -1) throw new Error('Brak kolumny "url"');
   const map = new Map();
-  for (let i=1;i<lines.length;i++) {
+  for (let i = 1; i < lines.length; i++) {
     if (!lines[i].trim()) continue;
     const cols = splitCSVLine(lines[i]);
-    const name = (cols[idx.name]||'').trim(); if (!name) continue;
-    if (!map.has(name)) map.set(name,{id:genId(),name,links:[],notes:idx.notes>=0?(cols[idx.notes]||'').trim():'',starred:idx.starred>=0?(cols[idx.starred]||'').trim().toLowerCase()==='true':false,socialX:idx.socialX>=0?(cols[idx.socialX]||'').trim():'',socialDiscord:idx.socialDiscord>=0?(cols[idx.socialDiscord]||'').trim():'',createdAt:Date.now(),order:Date.now()});
-    const url = (cols[idx.url]||'').trim();
-    if (url) map.get(name).links.push({id:genId(),url,name:idx.link_name>=0?(cols[idx.link_name]||'').trim():''});
+    const name = (cols[idx.name] || '').trim();
+    if (!name) continue;
+    if (!map.has(name)) {
+      map.set(name, {
+        id: genId(), name, links: [],
+        notes:         idx.notes         >= 0 ? (cols[idx.notes]         || '').trim() : '',
+        starred:       idx.starred        >= 0 ? (cols[idx.starred]       || '').trim().toLowerCase() === 'true' : false,
+        network:       idx.network        >= 0 ? (cols[idx.network]       || '').trim() : '',
+        socialX:       idx.socialX        >= 0 ? (cols[idx.socialX]       || '').trim() : '',
+        socialDiscord: idx.socialDiscord  >= 0 ? (cols[idx.socialDiscord] || '').trim() : '',
+        createdAt: Date.now(), order: Date.now(),
+      });
+    }
+    const url = (cols[idx.url] || '').trim();
+    if (url) {
+      map.get(name).links.push({
+        id:   genId(),
+        url,
+        name: idx.link_name >= 0 ? (cols[idx.link_name] || '').trim() : '',
+        note: idx.link_note >= 0 ? (cols[idx.link_note] || '').trim() : '',
+      });
+    }
   }
   return [...map.values()];
 }
@@ -2128,12 +2348,267 @@ async function doImport() {
 
 function exportProjects() {
   if (!projects.length) { showToast('⚠️ Brak projektów'); return; }
-  const data = projects.map(p => ({ name:p.name, links:(p.links||[]).map(l=>({url:l.url,name:l.name})), notes:p.notes||'', starred:p.starred||false, socialX:p.socialX||'', socialDiscord:p.socialDiscord||'' }));
-  const blob = new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const data = projects.map(p => ({
+    name:          p.name,
+    network:       p.network || '',
+    links:         (p.links||[]).map(l => ({ url: l.url, name: l.name || '', note: l.note || '' })),
+    notes:         p.notes || '',
+    starred:       p.starred || false,
+    socialX:       p.socialX || '',
+    socialDiscord: p.socialDiscord || ''
+  }));
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
   const url = URL.createObjectURL(blob);
-  const a = document.createElement('a'); a.href=url; a.download=`todocrypto-backup-${new Date().toISOString().slice(0,10)}.json`; a.click();
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `todocrypto-backup-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
   URL.revokeObjectURL(url);
   showToast(`✓ Eksportowano ${projects.length} projektów!`);
+}
+
+/* ============================================
+   WHITELIST / WAITLIST
+============================================ */
+let wlEntries = [];
+let wlFilter  = 'all';
+
+function saveWLToDB(entry) {
+  setSyncing('syncing');
+  return db.collection('users').doc(currentUser.uid).collection('wl').doc(entry.id).set(entry)
+    .then(() => setSyncing('synced'))
+    .catch(() => setSyncing('error'));
+}
+
+function deleteWLFromDB(id) {
+  return db.collection('users').doc(currentUser.uid).collection('wl').doc(id).delete();
+}
+
+// Nasłuchuj WL w initApp
+function initWLListener() {
+  db.collection('users').doc(currentUser.uid).collection('wl')
+    .orderBy('createdAt','desc')
+    .onSnapshot(snap => {
+      wlEntries = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      if (currentTab === 'wl') renderWL();
+    }, () => { wlEntries = []; });
+}
+
+function setWLFilter(f) {
+  wlFilter = f;
+  document.querySelectorAll('[data-wlf]').forEach(b => {
+    b.classList.remove('active-all','active-mainnet','active-testnet');
+  });
+  const btn = document.querySelector(`[data-wlf="${f}"]`);
+  if (btn) btn.classList.add('active-all');
+  renderWL();
+}
+
+function renderWL() {
+  renderWLStats();
+  const search = (document.getElementById('wl-search')?.value || '').toLowerCase();
+  const sort   = document.getElementById('wl-sort')?.value || 'date_desc';
+
+  let list = [...wlEntries];
+  if (search) list = list.filter(e =>
+    e.name.toLowerCase().includes(search) ||
+    (e.note||'').toLowerCase().includes(search) ||
+    (e.url||'').toLowerCase().includes(search)
+  );
+  if (wlFilter !== 'all') list = list.filter(e => e.status === wlFilter);
+
+  // Sortowanie
+  list.sort((a,b) => {
+    if (sort === 'date_desc')     return (b.createdAt||0) - (a.createdAt||0);
+    if (sort === 'date_asc')      return (a.createdAt||0) - (b.createdAt||0);
+    if (sort === 'name_asc')      return a.name.localeCompare(b.name);
+    if (sort === 'accounts_desc') return (b.accounts||1) - (a.accounts||1);
+    return 0;
+  });
+
+  const grid = document.getElementById('wl-grid');
+  if (!list.length) {
+    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--text-muted)">
+      <div style="font-size:48px;margin-bottom:12px">🎯</div>
+      <div style="font-size:16px;margin-bottom:16px">${search || wlFilter !== 'all' ? 'Brak wyników' : 'Brak zapisów WL — dodaj pierwszy!'}</div>
+      ${!search && wlFilter === 'all' ? '<button class="btn btn-primary" onclick="openModal(\'modal-add-wl\')">+ Dodaj WL</button>' : ''}
+    </div>`;
+    return;
+  }
+
+  const methodIcons = { wallet:'👛', twitter:'𝕏', email:'📧', discord:'💬', telegram:'✈️', other:'🔗' };
+  const statusMap = {
+    active:  { cls:'wl-s-active',  label:'🟢 Aktywne' },
+    won:     { cls:'wl-s-won',     label:'🏆 Wygrałem' },
+    lost:    { cls:'wl-s-lost',    label:'❌ Nie dostałem' },
+    pending: { cls:'wl-s-pending', label:'⏳ Oczekuję' },
+  };
+  const prioMap = { high:'wl-p-high', mid:'wl-p-mid', low:'wl-p-low' };
+  const prioLabel = { high:'🔴 Wysoki', mid:'🟡 Średni', low:'🟢 Niski' };
+
+  grid.innerHTML = list.map(e => {
+    const st  = statusMap[e.status] || statusMap.active;
+    const dateLabel = e.date ? new Date(e.date+'T00:00:00').toLocaleDateString('pl-PL',{day:'numeric',month:'short',year:'numeric'}) : '—';
+    const methods = (e.methods||[]).map(m => `<span class="wl-method-tag">${methodIcons[m]||'🔗'} ${m}</span>`).join('');
+    const daysAgo = e.createdAt ? Math.floor((Date.now()-e.createdAt)/86400000) : null;
+    const daysLabel = daysAgo === null ? '' : daysAgo === 0 ? 'dziś' : `${daysAgo} dni temu`;
+
+    return `
+    <div class="wl-card status-${e.status||'active'}">
+      <div class="wl-card-header">
+        <div class="wl-card-name">${esc(e.name)}</div>
+        <span class="wl-status-badge ${st.cls}">${st.label}</span>
+        <span class="wl-priority ${prioMap[e.priority||'mid']}">${prioLabel[e.priority||'mid']}</span>
+        <button class="btn-icon" onclick="editWLEntry('${e.id}')">✏️</button>
+        <button class="btn-icon" onclick="deleteWLEntry('${e.id}')" style="color:var(--red)">🗑</button>
+      </div>
+      <div class="wl-card-body">
+        ${e.url ? `<div class="wl-row">
+          <span class="wl-row-label">LINK</span>
+          <a href="${esc(e.url)}" target="_blank" rel="noopener" style="color:var(--cyan);font-family:var(--font-mono);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">${esc(e.url)}</a>
+          <button class="link-copy-btn" onclick="copyLink('${esc(e.url)}')">📋</button>
+        </div>` : ''}
+        <div class="wl-row">
+          <span class="wl-row-label">METODA</span>
+          ${methods || '<span style="font-size:12px;color:var(--text-muted)">—</span>'}
+        </div>
+        <div class="wl-row">
+          <span class="wl-row-label">KONTA</span>
+          <span style="font-family:var(--font-mono);font-size:13px;color:var(--text)">${e.accounts||1} ${(e.accounts||1) === 1 ? 'konto' : 'konta/kont'}</span>
+          ${e.date ? `<span style="flex:1"></span><span style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted)">📅 ${dateLabel}</span>` : ''}
+        </div>
+        ${e.note ? `<div class="wl-note-text">💬 ${esc(e.note)}</div>` : ''}
+      </div>
+      <div class="wl-card-footer">
+        <span class="wl-date">${daysLabel ? `dodano ${daysLabel}` : ''}</span>
+        <div style="display:flex;gap:6px">
+          <button class="net-filter-btn" style="font-size:11px;padding:3px 8px" onclick="quickStatusWL('${e.id}','won')" title="Oznacz jako wygrany">🏆</button>
+          <button class="net-filter-btn" style="font-size:11px;padding:3px 8px" onclick="quickStatusWL('${e.id}','lost')" title="Oznacz jako przegrany">❌</button>
+          <button class="net-filter-btn" style="font-size:11px;padding:3px 8px" onclick="quickStatusWL('${e.id}','active')" title="Oznacz jako aktywny">🟢</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderWLStats() {
+  const total   = wlEntries.length;
+  const active  = wlEntries.filter(e => e.status === 'active').length;
+  const won     = wlEntries.filter(e => e.status === 'won').length;
+  const lost    = wlEntries.filter(e => e.status === 'lost').length;
+  const pending = wlEntries.filter(e => e.status === 'pending').length;
+  const totalAccounts = wlEntries.reduce((s,e) => s + (e.accounts||1), 0);
+  const winRate = (active+won+lost) > 0 ? Math.round(won/(won+lost||1)*100) : 0;
+
+  const el = document.getElementById('wl-stats');
+  if (!el) return;
+  el.innerHTML = `
+    <div class="daily-stat-card c-cyan">
+      <div class="daily-stat-val c-cyan">${total}</div>
+      <div class="daily-stat-lbl">Wszystkich WL</div>
+      <div class="daily-stat-sub">${totalAccounts} kont łącznie</div>
+    </div>
+    <div class="daily-stat-card c-green">
+      <div class="daily-stat-val c-green">${active}</div>
+      <div class="daily-stat-lbl">Aktywnych</div>
+      <div class="daily-stat-sub">${pending} oczekuje</div>
+    </div>
+    <div class="daily-stat-card c-yellow">
+      <div class="daily-stat-val c-yellow">${won}</div>
+      <div class="daily-stat-lbl">Wygranych</div>
+      <div class="daily-stat-sub">win rate ${winRate}%</div>
+    </div>
+    <div class="daily-stat-card c-red">
+      <div class="daily-stat-val c-red">${lost}</div>
+      <div class="daily-stat-lbl">Nie dostałem</div>
+      <div class="daily-stat-sub">${won+lost > 0 ? `z ${won+lost} rozstrzygniętych` : 'brak rozstrzygniętych'}</div>
+    </div>`;
+}
+
+// Checkbox methods - toggle visual state
+document.addEventListener('change', e => {
+  if (e.target.classList.contains('wl-method-cb')) {
+    e.target.closest('.wl-method-label').classList.toggle('checked', e.target.checked);
+  }
+});
+
+function openModal_wl_reset() {
+  document.getElementById('wl-modal-title').textContent = '// NOWY WHITELIST';
+  document.getElementById('edit-wl-id').value   = '';
+  document.getElementById('wl-name').value      = '';
+  document.getElementById('wl-url').value       = '';
+  document.getElementById('wl-accounts').value  = '1';
+  document.getElementById('wl-note').value      = '';
+  document.getElementById('wl-status').value    = 'active';
+  document.getElementById('wl-priority').value  = 'mid';
+  // Reset daty na dziś
+  document.getElementById('wl-date').value = new Date().toISOString().slice(0,10);
+  // Reset checkboxów
+  document.querySelectorAll('.wl-method-cb').forEach(cb => {
+    cb.checked = false;
+    cb.closest('.wl-method-label').classList.remove('checked');
+  });
+}
+
+async function saveWLEntry() {
+  const name = document.getElementById('wl-name').value.trim();
+  if (!name) { alert('Wpisz nazwę projektu!'); return; }
+
+  const methods = [...document.querySelectorAll('.wl-method-cb:checked')].map(cb => cb.value);
+  const editId  = document.getElementById('edit-wl-id').value;
+
+  const entry = {
+    id:       editId || genId(),
+    name,
+    url:      document.getElementById('wl-url').value.trim(),
+    status:   document.getElementById('wl-status').value,
+    priority: document.getElementById('wl-priority').value,
+    methods,
+    accounts: parseInt(document.getElementById('wl-accounts').value) || 1,
+    date:     document.getElementById('wl-date').value,
+    note:     document.getElementById('wl-note').value.trim(),
+    createdAt: editId ? (wlEntries.find(e=>e.id===editId)?.createdAt || Date.now()) : Date.now(),
+  };
+
+  await saveWLToDB(entry);
+  closeModal('modal-add-wl');
+  showToast(editId ? '✓ WL zaktualizowany!' : '✓ WL dodany!');
+}
+
+function editWLEntry(id) {
+  const e = wlEntries.find(x => x.id === id);
+  if (!e) return;
+  openModal_wl_reset();
+  document.getElementById('wl-modal-title').textContent = '// EDYTUJ WHITELIST';
+  document.getElementById('edit-wl-id').value   = e.id;
+  document.getElementById('wl-name').value      = e.name;
+  document.getElementById('wl-url').value       = e.url || '';
+  document.getElementById('wl-accounts').value  = e.accounts || 1;
+  document.getElementById('wl-note').value      = e.note || '';
+  document.getElementById('wl-status').value    = e.status || 'active';
+  document.getElementById('wl-priority').value  = e.priority || 'mid';
+  document.getElementById('wl-date').value      = e.date || '';
+  // Ustaw checkboxy
+  (e.methods||[]).forEach(m => {
+    const cb = document.querySelector(`.wl-method-cb[value="${m}"]`);
+    if (cb) { cb.checked = true; cb.closest('.wl-method-label').classList.add('checked'); }
+  });
+  openModal('modal-add-wl');
+}
+
+async function deleteWLEntry(id) {
+  if (!confirm('Usunąć ten wpis WL?')) return;
+  await deleteWLFromDB(id);
+  showToast('🗑 WL usunięty');
+}
+
+async function quickStatusWL(id, status) {
+  const e = wlEntries.find(x => x.id === id);
+  if (!e) return;
+  e.status = status;
+  await saveWLToDB(e);
+  const labels = { won:'🏆 Wygrałem!', lost:'❌ Oznaczono jako przegrany', active:'🟢 Aktywny' };
+  showToast(labels[status] || '✓ Status zmieniony');
 }
 
 /* ============================================
