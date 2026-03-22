@@ -640,7 +640,7 @@ main{max-width:1400px;margin:0 auto;padding:24px 20px}
         <h2 style="font-size:20px;font-weight:700;margin-bottom:4px">🎯 Whitelist / Waitlist</h2>
         <div class="daily-date">Twoje zapisy na WL i waitlisty projektów</div>
       </div>
-      <button class="btn btn-primary" onclick="openModal('modal-add-wl')">+ Dodaj WL</button>
+      <button class="btn btn-primary" onclick="openNewWL()">+ Dodaj WL</button>
     </div>
 
     <!-- Statystyki WL -->
@@ -751,6 +751,14 @@ main{max-width:1400px;margin:0 auto;padding:24px 20px}
           <option value="low">🟢 Niski</option>
         </select>
       </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" style="display:flex;align-items:center;gap:6px">
+        🎁 Data odbioru nagrody
+        <span style="font-size:10px;color:var(--text-muted);font-weight:400;letter-spacing:0">(opcjonalnie — dostaniesz przypomnienie)</span>
+      </label>
+      <input type="date" class="form-input" id="wl-claim-date">
     </div>
 
     <div class="form-group">
@@ -1313,7 +1321,7 @@ function setView(v) {
 function openModal(id) {
   document.getElementById(id).classList.add('open');
   if (id === 'modal-import') { updateFormatExample(); clearImportPreview(); }
-  if (id === 'modal-add-wl') openModal_wl_reset();
+  if (id === 'modal-add-wl') { /* reset tylko przy nowym WL — patrz openNewWL() i editWLEntry() */ }
   if (id === 'modal-add-alert') {
     document.getElementById('edit-alert-id').value = '';
     document.getElementById('alert-modal-title').textContent = '// NOWY ALERT';
@@ -2431,7 +2439,7 @@ function renderWL() {
     grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--text-muted)">
       <div style="font-size:48px;margin-bottom:12px">🎯</div>
       <div style="font-size:16px;margin-bottom:16px">${search || wlFilter !== 'all' ? 'Brak wyników' : 'Brak zapisów WL — dodaj pierwszy!'}</div>
-      ${!search && wlFilter === 'all' ? '<button class="btn btn-primary" onclick="openModal(\'modal-add-wl\')">+ Dodaj WL</button>' : ''}
+      ${!search && wlFilter === 'all' ? '<button class="btn btn-primary" onclick="openNewWL()">+ Dodaj WL</button>' : ''}
     </div>`;
     return;
   }
@@ -2452,6 +2460,18 @@ function renderWL() {
     const methods = (e.methods||[]).map(m => `<span class="wl-method-tag">${methodIcons[m]||'🔗'} ${m}</span>`).join('');
     const daysAgo = e.createdAt ? Math.floor((Date.now()-e.createdAt)/86400000) : null;
     const daysLabel = daysAgo === null ? '' : daysAgo === 0 ? 'dziś' : `${daysAgo} dni temu`;
+
+    // Badge daty odbioru nagrody
+    let claimBadge = '';
+    if (e.claimDate) {
+      const dc = daysUntil(e.claimDate);
+      const claimFmt = new Date(e.claimDate+'T00:00:00').toLocaleDateString('pl-PL',{day:'numeric',month:'short',year:'numeric'});
+      if (dc < 0)      claimBadge = `<div class="wl-row"><span class="wl-row-label">ODBIÓR</span><span class="alert-days days-done">minął ${Math.abs(dc)} dni temu</span></div>`;
+      else if (dc===0) claimBadge = `<div class="wl-row"><span class="wl-row-label">ODBIÓR</span><span class="alert-days days-urgent">🎁 DZIŚ!</span></div>`;
+      else if (dc<=3)  claimBadge = `<div class="wl-row"><span class="wl-row-label">ODBIÓR</span><span class="alert-days days-urgent">🎁 Za ${dc} dni!</span></div>`;
+      else if (dc<=7)  claimBadge = `<div class="wl-row"><span class="wl-row-label">ODBIÓR</span><span class="alert-days days-soon">🎁 Za ${dc} dni</span></div>`;
+      else             claimBadge = `<div class="wl-row"><span class="wl-row-label">ODBIÓR</span><span style="font-family:var(--font-mono);font-size:12px;color:var(--text-muted)">🎁 ${claimFmt} (za ${dc} dni)</span></div>`;
+    }
 
     return `
     <div class="wl-card status-${e.status||'active'}">
@@ -2477,6 +2497,7 @@ function renderWL() {
           <span style="font-family:var(--font-mono);font-size:13px;color:var(--text)">${e.accounts||1} ${(e.accounts||1) === 1 ? 'konto' : 'konta/kont'}</span>
           ${e.date ? `<span style="flex:1"></span><span style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted)">📅 ${dateLabel}</span>` : ''}
         </div>
+        ${claimBadge}
         ${e.note ? `<div class="wl-note-text">💬 ${esc(e.note)}</div>` : ''}
       </div>
       <div class="wl-card-footer">
@@ -2532,17 +2553,23 @@ document.addEventListener('change', e => {
   }
 });
 
+// Otwórz modal dla NOWEGO wpisu WL
+function openNewWL() {
+  openModal_wl_reset();
+  document.getElementById('modal-add-wl').classList.add('open');
+}
+
 function openModal_wl_reset() {
   document.getElementById('wl-modal-title').textContent = '// NOWY WHITELIST';
-  document.getElementById('edit-wl-id').value   = '';
-  document.getElementById('wl-name').value      = '';
-  document.getElementById('wl-url').value       = '';
-  document.getElementById('wl-accounts').value  = '1';
-  document.getElementById('wl-note').value      = '';
-  document.getElementById('wl-status').value    = 'active';
-  document.getElementById('wl-priority').value  = 'mid';
-  // Reset daty na dziś
-  document.getElementById('wl-date').value = new Date().toISOString().slice(0,10);
+  document.getElementById('edit-wl-id').value    = '';
+  document.getElementById('wl-name').value       = '';
+  document.getElementById('wl-url').value        = '';
+  document.getElementById('wl-accounts').value   = '1';
+  document.getElementById('wl-note').value       = '';
+  document.getElementById('wl-status').value     = 'active';
+  document.getElementById('wl-priority').value   = 'mid';
+  document.getElementById('wl-date').value       = new Date().toISOString().slice(0,10);
+  document.getElementById('wl-claim-date').value = '';
   // Reset checkboxów
   document.querySelectorAll('.wl-method-cb').forEach(cb => {
     cb.checked = false;
@@ -2554,20 +2581,22 @@ async function saveWLEntry() {
   const name = document.getElementById('wl-name').value.trim();
   if (!name) { alert('Wpisz nazwę projektu!'); return; }
 
-  const methods = [...document.querySelectorAll('.wl-method-cb:checked')].map(cb => cb.value);
-  const editId  = document.getElementById('edit-wl-id').value;
+  const methods   = [...document.querySelectorAll('.wl-method-cb:checked')].map(cb => cb.value);
+  const editId    = document.getElementById('edit-wl-id').value;
+  const claimDate = document.getElementById('wl-claim-date').value;
 
   const entry = {
-    id:       editId || genId(),
+    id:        editId || genId(),
     name,
-    url:      document.getElementById('wl-url').value.trim(),
-    status:   document.getElementById('wl-status').value,
-    priority: document.getElementById('wl-priority').value,
+    url:       document.getElementById('wl-url').value.trim(),
+    status:    document.getElementById('wl-status').value,
+    priority:  document.getElementById('wl-priority').value,
     methods,
-    accounts: parseInt(document.getElementById('wl-accounts').value) || 1,
-    date:     document.getElementById('wl-date').value,
-    note:     document.getElementById('wl-note').value.trim(),
-    createdAt: editId ? (wlEntries.find(e=>e.id===editId)?.createdAt || Date.now()) : Date.now(),
+    accounts:  parseInt(document.getElementById('wl-accounts').value) || 1,
+    date:      document.getElementById('wl-date').value,
+    claimDate,
+    note:      document.getElementById('wl-note').value.trim(),
+    createdAt: editId ? (wlEntries.find(e => e.id === editId)?.createdAt || Date.now()) : Date.now(),
   };
 
   await saveWLToDB(entry);
@@ -2576,24 +2605,36 @@ async function saveWLEntry() {
 }
 
 function editWLEntry(id) {
+  // Najpierw reset, potem wypełnij — kolejność ma znaczenie!
   const e = wlEntries.find(x => x.id === id);
   if (!e) return;
-  openModal_wl_reset();
-  document.getElementById('wl-modal-title').textContent = '// EDYTUJ WHITELIST';
-  document.getElementById('edit-wl-id').value   = e.id;
-  document.getElementById('wl-name').value      = e.name;
-  document.getElementById('wl-url').value       = e.url || '';
-  document.getElementById('wl-accounts').value  = e.accounts || 1;
-  document.getElementById('wl-note').value      = e.note || '';
-  document.getElementById('wl-status').value    = e.status || 'active';
-  document.getElementById('wl-priority').value  = e.priority || 'mid';
-  document.getElementById('wl-date').value      = e.date || '';
-  // Ustaw checkboxy
-  (e.methods||[]).forEach(m => {
+
+  // Reset pól
+  document.querySelectorAll('.wl-method-cb').forEach(cb => {
+    cb.checked = false;
+    cb.closest('.wl-method-label').classList.remove('checked');
+  });
+
+  // Wypełnij danymi
+  document.getElementById('wl-modal-title').textContent  = '// EDYTUJ WHITELIST';
+  document.getElementById('edit-wl-id').value    = e.id;
+  document.getElementById('wl-name').value       = e.name;
+  document.getElementById('wl-url').value        = e.url        || '';
+  document.getElementById('wl-accounts').value   = e.accounts   || 1;
+  document.getElementById('wl-note').value       = e.note       || '';
+  document.getElementById('wl-status').value     = e.status     || 'active';
+  document.getElementById('wl-priority').value   = e.priority   || 'mid';
+  document.getElementById('wl-date').value       = e.date       || '';
+  document.getElementById('wl-claim-date').value = e.claimDate  || '';
+
+  // Ustaw checkboxy metod
+  (e.methods || []).forEach(m => {
     const cb = document.querySelector(`.wl-method-cb[value="${m}"]`);
     if (cb) { cb.checked = true; cb.closest('.wl-method-label').classList.add('checked'); }
   });
-  openModal('modal-add-wl');
+
+  // Otwórz modal bezpośrednio (bez reset!)
+  document.getElementById('modal-add-wl').classList.add('open');
 }
 
 async function deleteWLEntry(id) {
