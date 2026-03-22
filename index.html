@@ -921,15 +921,23 @@ main{max-width:1400px;margin:0 auto;padding:24px 20px}
       <label class="form-label">Treść zadania *</label>
       <input type="text" class="form-input" id="new-task-text" placeholder="np. Sprawdź gas fees na L2...">
     </div>
-    <div class="form-group">
-      <label class="form-label">Kategoria</label>
-      <select class="form-input" id="new-task-cat">
-        <option value="defi">⚡ DeFi</option>
-        <option value="check">✅ Sprawdzenie</option>
-        <option value="social">💬 Social / Discord</option>
-        <option value="security">🔐 Bezpieczeństwo</option>
-        <option value="other">📌 Inne</option>
-      </select>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <div class="form-group" style="flex:1;min-width:140px">
+        <label class="form-label">Kategoria</label>
+        <select class="form-input" id="new-task-cat">
+          <option value="defi">⚡ DeFi</option>
+          <option value="check">✅ Sprawdzenie</option>
+          <option value="social">💬 Social / Discord</option>
+          <option value="security">🔐 Bezpieczeństwo</option>
+          <option value="other">📌 Inne</option>
+        </select>
+      </div>
+      <div class="form-group" style="flex:1;min-width:140px">
+        <label class="form-label">Projekt (opcjonalnie)</label>
+        <select class="form-input" id="new-task-project">
+          <option value="">— bez projektu</option>
+        </select>
+      </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal('modal-add-task')">Anuluj</button>
@@ -1322,6 +1330,7 @@ function openModal(id) {
   document.getElementById(id).classList.add('open');
   if (id === 'modal-import') { updateFormatExample(); clearImportPreview(); }
   if (id === 'modal-add-wl') { /* reset tylko przy nowym WL — patrz openNewWL() i editWLEntry() */ }
+  if (id === 'modal-add-task') populateTaskProjectSelect();
   if (id === 'modal-add-alert') {
     document.getElementById('edit-alert-id').value = '';
     document.getElementById('alert-modal-title').textContent = '// NOWY ALERT';
@@ -1452,8 +1461,14 @@ function renderCard(p) {
     const label = days === 0 ? 'dziś' : days === 1 ? 'wczoraj' : `${days} dni`;
     daysBadge = `<span class="days-badge ${cls}">${label}</span>`;
   }
-  // Badge sieci
-  let networkBadge = '';
+  // Badge WL — ile aktywnych WL dla tego projektu
+  const wlCount = wlEntries.filter(w =>
+    w.name.toLowerCase() === p.name.toLowerCase() ||
+    (w.projectId && w.projectId === p.id)
+  ).length;
+  const wlBadge = wlCount > 0
+    ? `<span class="badge" style="border-color:rgba(167,139,250,0.4);color:#a78bfa;background:rgba(167,139,250,0.06);cursor:pointer" onclick="goToWL('${esc(p.name)}')" title="Przejdź do WL tego projektu">🎯 ${wlCount} WL</span>`
+    : '';
   if (p.network === 'mainnet') networkBadge = `<span class="network-badge network-mainnet">MAINNET</span>`;
   else if (p.network === 'testnet') networkBadge = `<span class="network-badge network-testnet">TESTNET</span>`;
   const xUrl = p.socialX || '', dcUrl = p.socialDiscord || '';
@@ -1474,6 +1489,7 @@ function renderCard(p) {
       <span class="badge green">${linkCount} link${linkCount!==1?'i':''}</span>
       ${daysBadge}
       ${networkBadge}
+      ${wlBadge}
     </div>
     <div class="card-social">${socialHtml}</div>
     <button class="btn-icon ${p.starred?'starred':''}" onclick="toggleStar('${p.id}')">⭐</button>
@@ -1493,6 +1509,7 @@ function renderCard(p) {
     </div>
   </div>
   <div class="card-footer">
+    <button class="btn btn-secondary" style="font-size:12px;padding:5px 12px" onclick="quickAddAlert('${esc(p.name)}')">🔔 + Alert</button>
     <button class="btn btn-secondary" style="font-size:12px;padding:5px 12px" onclick="duplicateProject('${p.id}')">⧉ Duplikuj</button>
     <button class="btn btn-danger" onclick="deleteProject('${p.id}')">🗑 Usuń projekt</button>
   </div>
@@ -1864,9 +1881,13 @@ function renderDailyTasks() {
   const catLabels2 = { defi:'DeFi', check:'Sprawdzenie', social:'Social', security:'Bezpieczeństwo', other:'Inne' };
   grid.innerHTML = tasks.map(t => {
     const isDone = isTaskDoneToday(t.id);
+    const projTag = t.projectName
+      ? `<span class="task-category" style="color:#a78bfa;border-color:rgba(167,139,250,0.3);background:rgba(167,139,250,0.06);cursor:pointer" onclick="event.stopPropagation();switchTab('projects');document.querySelector('[data-tab=projects]').click()" title="Przejdź do projektu">📁 ${esc(t.projectName)}</span>`
+      : '';
     return `<div class="task-item ${isDone?'done':''}" onclick="toggleTask('${t.id}')">
       <div class="task-checkbox">${isDone?'✓':''}</div>
       <div class="task-text">${esc(t.text)}</div>
+      ${projTag}
       <span class="task-category cat-${t.cat||'defi'}">${catLabels2[t.cat]||t.cat}</span>
       <button class="btn-icon" onclick="delTask(event,'${t.id}')">🗑</button></div>`;
   }).join('');
@@ -1878,9 +1899,18 @@ function toggleTask(id) {
 }
 
 async function saveNewTask() {
-  const text = document.getElementById('new-task-text').value.trim();
+  const text      = document.getElementById('new-task-text').value.trim();
   if (!text) { alert('Wpisz treść zadania!'); return; }
-  const t = { id: genId(), text, cat: document.getElementById('new-task-cat').value, createdAt: Date.now() };
+  const projectId = document.getElementById('new-task-project').value;
+  const projectName = projectId ? (projects.find(p=>p.id===projectId)?.name||'') : '';
+  const t = {
+    id: genId(),
+    text,
+    cat:      document.getElementById('new-task-cat').value,
+    projectId,
+    projectName,
+    createdAt: Date.now()
+  };
   await saveTask(t);
   closeModal('modal-add-task');
   document.getElementById('new-task-text').value = '';
@@ -2502,7 +2532,8 @@ function renderWL() {
       </div>
       <div class="wl-card-footer">
         <span class="wl-date">${daysLabel ? `dodano ${daysLabel}` : ''}</span>
-        <div style="display:flex;gap:6px">
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          ${e.claimDate ? `<button class="net-filter-btn" style="font-size:11px;padding:3px 8px;color:var(--cyan);border-color:rgba(0,212,255,0.3)" onclick="wlCreateAlert('${e.id}')" title="Utwórz alert z daty odbioru">🔔 Alert</button>` : ''}
           <button class="net-filter-btn" style="font-size:11px;padding:3px 8px" onclick="quickStatusWL('${e.id}','won')" title="Oznacz jako wygrany">🏆</button>
           <button class="net-filter-btn" style="font-size:11px;padding:3px 8px" onclick="quickStatusWL('${e.id}','lost')" title="Oznacz jako przegrany">❌</button>
           <button class="net-filter-btn" style="font-size:11px;padding:3px 8px" onclick="quickStatusWL('${e.id}','active')" title="Oznacz jako aktywny">🟢</button>
@@ -2650,6 +2681,77 @@ async function quickStatusWL(id, status) {
   await saveWLToDB(e);
   const labels = { won:'🏆 Wygrałem!', lost:'❌ Oznaczono jako przegrany', active:'🟢 Aktywny' };
   showToast(labels[status] || '✓ Status zmieniony');
+}
+
+/* ============================================
+   POWIĄZANIA MIĘDZY ZAKŁADKAMI
+============================================ */
+
+// 1. Projekty ↔ Alerty — szybkie dodanie alertu z projektu
+function quickAddAlert(projectName) {
+  // Przygotuj modal alertu z nazwą projektu
+  document.getElementById('edit-alert-id').value = '';
+  document.getElementById('alert-modal-title').textContent = '// NOWY ALERT';
+  document.getElementById('new-alert-title').value = projectName ? `${projectName} — ` : '';
+  document.getElementById('new-alert-note').value  = '';
+  const tom = new Date(); tom.setDate(tom.getDate()+7);
+  document.getElementById('new-alert-date').value  = tom.toISOString().slice(0,10);
+  document.getElementById('modal-add-alert').classList.add('open');
+  // Ustaw kursor na końcu nazwy
+  setTimeout(() => {
+    const inp = document.getElementById('new-alert-title');
+    inp.focus();
+    inp.setSelectionRange(inp.value.length, inp.value.length);
+  }, 100);
+}
+
+// 2. WL ↔ Alerty — utwórz alert z daty odbioru WL
+async function wlCreateAlert(wlId) {
+  const e = wlEntries.find(x => x.id === wlId);
+  if (!e) return;
+  if (!e.claimDate) { showToast('⚠️ Brak daty odbioru w tym WL'); return; }
+
+  // Sprawdź czy alert już istnieje
+  const exists = alertsList.find(a => a.wlId === wlId);
+  if (exists) {
+    if (!confirm(`Alert dla "${e.name}" już istnieje. Czy utworzyć nowy?`)) return;
+  }
+
+  const alert = {
+    id: genId(),
+    title: `🎁 Odbiór nagrody: ${e.name}`,
+    date: e.claimDate,
+    note: `WL: ${e.url || ''}`,
+    done: false,
+    wlId, // powiązanie z WL
+  };
+  await db.collection('users').doc(currentUser.uid).collection('alerts').doc(alert.id).set(alert);
+  showToast(`✓ Alert utworzony dla "${e.name}"!`);
+  // Pokaż zakładkę alertów
+  setTimeout(() => {
+    switchTab('alerts');
+    document.querySelector('[data-tab="alerts"]').click();
+  }, 800);
+}
+
+// 3. Projekty ↔ WL — przejdź do WL filtrowanego po nazwie projektu
+function goToWL(projectName) {
+  switchTab('wl');
+  document.querySelector('[data-tab="wl"]').click();
+  // Wpisz nazwę do wyszukiwarki WL
+  setTimeout(() => {
+    const inp = document.getElementById('wl-search');
+    if (inp) { inp.value = projectName; renderWL(); }
+  }, 100);
+}
+
+// 4. Daily Tasks ↔ Projekty — wypełnij listę projektów w modalu zadania
+function populateTaskProjectSelect() {
+  const sel = document.getElementById('new-task-project');
+  if (!sel) return;
+  const current = sel.value;
+  sel.innerHTML = '<option value="">— bez projektu</option>' +
+    projects.map(p => `<option value="${esc(p.id)}" ${p.id===current?'selected':''}>${esc(p.name)}</option>`).join('');
 }
 
 /* ============================================
