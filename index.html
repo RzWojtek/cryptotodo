@@ -588,7 +588,7 @@ main{max-width:1400px;margin:0 auto;padding:24px 20px}
         <h2 style="font-size:20px;font-weight:700;margin-bottom:4px">Alerty / Przypomnienia</h2>
         <div class="daily-date">Nadchodzące terminy i ważne daty</div>
       </div>
-      <button class="btn btn-primary" onclick="openModal('modal-add-alert')">+ Dodaj alert</button>
+      <button class="btn btn-primary" onclick="openNewAlert()">+ Dodaj alert</button>
     </div>
     <div class="alerts-legend">
       <div class="legend-item"><div class="legend-dot" style="background:var(--red)"></div>Pilne (≤3 dni)</div>
@@ -1147,11 +1147,12 @@ function setSyncing(state) {
 /* ============================================
    STATE — dane w pamięci (cache lokalny)
 ============================================ */
-let projects = [];
-let tasks    = [];
-let taskDone = {};
+let projects   = [];
+let tasks      = [];
+let taskDone   = {};
 let alertsList = [];
-let wallets  = [];
+let wallets    = [];
+let wlEntries  = []; // deklaracja tu — renderCard używa wlEntries wcześniej w kodzie
 
 /* ============================================
    INIT APP — nasłuchuj zmian z Firestore
@@ -1242,7 +1243,7 @@ async function deleteTaskFromDB(id) {
   await userDoc('tasks').doc(id).delete();
 }
 
-async function saveAlert(a) {
+async function saveAlertToDB(a) {
   setSyncing('syncing');
   try {
     await userDoc('alerts').doc(a.id).set(a);
@@ -1331,14 +1332,7 @@ function openModal(id) {
   if (id === 'modal-import') { updateFormatExample(); clearImportPreview(); }
   if (id === 'modal-add-wl') { /* reset tylko przy nowym WL — patrz openNewWL() i editWLEntry() */ }
   if (id === 'modal-add-task') populateTaskProjectSelect();
-  if (id === 'modal-add-alert') {
-    document.getElementById('edit-alert-id').value = '';
-    document.getElementById('alert-modal-title').textContent = '// NOWY ALERT';
-    document.getElementById('new-alert-title').value = '';
-    document.getElementById('new-alert-note').value  = '';
-    const tom = new Date(); tom.setDate(tom.getDate()+1);
-    document.getElementById('new-alert-date').value  = tom.toISOString().slice(0,10);
-  }
+  if (id === 'modal-add-alert') { /* reset tylko przy nowym alercie — patrz openNewAlert() */ }
 }
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 document.querySelectorAll('.modal-overlay').forEach(el => {
@@ -1593,7 +1587,7 @@ function removeLinkRow(btn) {
 
 async function saveNewProject() {
   const name = document.getElementById('new-project-name').value.trim();
-  if (!name) { alert('Wpisz nazwę projektu!'); return; }
+  if (!name) { showToast('⚠️ Wpisz nazwę projektu!'); return; }
   const links = [];
   document.querySelectorAll('#new-links-container .link-row').forEach(row => {
     const url = row.querySelector('.link-url').value.trim();
@@ -1675,7 +1669,7 @@ async function saveNewLink() {
   const url  = document.getElementById('add-link-url').value.trim();
   const name = document.getElementById('add-link-name').value.trim();
   const note = document.getElementById('add-link-note').value.trim();
-  if (!url) { alert('Wpisz URL!'); return; }
+  if (!url) { showToast('⚠️ Wpisz URL linku!'); return; }
   const proj = projects.find(p => p.id === projectId);
   if (!proj) return;
   proj.links = proj.links || [];
@@ -1736,13 +1730,6 @@ async function saveSocialEdit() {
   await saveProject(proj);
   closeModal('modal-social-edit');
   showToast('✓ Linki społecznościowe zapisane!');
-}
-
-function openInBrowser(projectId, browserName) {
-  const proj = projects.find(p => p.id === projectId);
-  if (!proj || !(proj.links||[]).length) { showBrowserToast('⚠️ Brak linków!'); return; }
-  proj.links.forEach(l => window.open(l.url, '_blank'));
-  showBrowserToast(`🌐 Otwieranie ${proj.links.length} linków w ${browserName}`);
 }
 
 /* ============================================
@@ -1900,7 +1887,7 @@ function toggleTask(id) {
 
 async function saveNewTask() {
   const text      = document.getElementById('new-task-text').value.trim();
-  if (!text) { alert('Wpisz treść zadania!'); return; }
+  if (!text) { showToast('⚠️ Wpisz treść zadania!'); return; }
   const projectId = document.getElementById('new-task-project').value;
   const projectName = projectId ? (projects.find(p=>p.id===projectId)?.name||'') : '';
   const t = {
@@ -1947,7 +1934,7 @@ function renderAlerts() {
     grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--text-muted)">
       <div style="font-size:48px;margin-bottom:12px">🔔</div>
       <div style="font-size:16px;margin-bottom:16px">Brak alertów</div>
-      <button class="btn btn-primary" onclick="openModal('modal-add-alert')">+ Dodaj alert</button></div>`;
+      <button class="btn btn-primary" onclick="openNewAlert()">+ Dodaj alert</button></div>`;
     return;
   }
   grid.innerHTML = sorted.map(a => {
@@ -1963,9 +1950,9 @@ function renderAlerts() {
     return `<div class="alert-card ${urgency}">
       <div class="alert-top"><div class="alert-title">${esc(a.title)}</div>
       <div class="alert-actions">
-        <button class="btn-icon" onclick="toggleAlertDone('${a.id}')">${a.done?'↩':'✓'}</button>
-        <button class="btn-icon" onclick="editAlertModal('${a.id}')">✏️</button>
-        <button class="btn-icon" onclick="delAlert('${a.id}')" style="color:var(--red)">🗑</button>
+        <button class="btn-icon" data-id="${esc(a.id)}" onclick="toggleAlertDone(this.dataset.id)">${a.done?'↩':'✓'}</button>
+        <button class="btn-icon" data-id="${esc(a.id)}" onclick="editAlertModal(this.dataset.id)">✏️</button>
+        <button class="btn-icon" data-id="${esc(a.id)}" onclick="delAlert(this.dataset.id)" style="color:var(--red)">🗑</button>
       </div></div>
       <div class="alert-meta"><span class="alert-date">📅 ${df}</span><span class="alert-days ${dc}">${dl}</span></div>
       ${a.note?`<div class="alert-note">${esc(a.note)}</div>`:''}
@@ -1977,34 +1964,54 @@ async function saveAlert() {
   const title = document.getElementById('new-alert-title').value.trim();
   const date  = document.getElementById('new-alert-date').value;
   const note  = document.getElementById('new-alert-note').value.trim();
-  if (!title) { alert('Wpisz tytuł!'); return; }
-  if (!date)  { alert('Wybierz datę!'); return; }
+  if (!title) { showToast('⚠️ Wpisz tytuł alertu!'); document.getElementById('new-alert-title').focus(); return; }
+  if (!date)  { showToast('⚠️ Wybierz datę terminu!'); document.getElementById('new-alert-date').focus(); return; }
   const editId = document.getElementById('edit-alert-id').value;
   const a = editId
     ? { ...alertsList.find(x => x.id===editId), title, date, note }
     : { id: genId(), title, date, note, done: false };
-  await (editId ? db.collection('users').doc(currentUser.uid).collection('alerts').doc(editId).set(a)
-                : db.collection('users').doc(currentUser.uid).collection('alerts').doc(a.id).set(a));
+  await (editId
+    ? db.collection('users').doc(currentUser.uid).collection('alerts').doc(editId).set(a)
+    : db.collection('users').doc(currentUser.uid).collection('alerts').doc(a.id).set(a));
   closeModal('modal-add-alert');
-  showToast('✓ Alert zapisany!');
+  showToast(editId ? '✓ Alert zaktualizowany!' : '✓ Alert dodany!');
+}
+
+function openNewAlert(prefillTitle) {
+  document.getElementById('edit-alert-id').value = '';
+  document.getElementById('alert-modal-title').textContent = '// NOWY ALERT';
+  document.getElementById('new-alert-title').value = prefillTitle || '';
+  document.getElementById('new-alert-note').value  = '';
+  const tom = new Date(); tom.setDate(tom.getDate()+1);
+  document.getElementById('new-alert-date').value  = tom.toISOString().slice(0,10);
+  document.getElementById('modal-add-alert').classList.add('open');
+  if (prefillTitle) {
+    setTimeout(() => {
+      const inp = document.getElementById('new-alert-title');
+      inp.focus();
+      inp.setSelectionRange(inp.value.length, inp.value.length);
+    }, 100);
+  }
 }
 
 function editAlertModal(id) {
-  const a = alertsList.find(x => x.id===id);
+  const a = alertsList.find(x => x.id === id);
   if (!a) return;
-  document.getElementById('edit-alert-id').value    = a.id;
+  // Wypełnij pola PRZED otwarciem modalu
+  document.getElementById('edit-alert-id').value          = a.id;
   document.getElementById('alert-modal-title').textContent = '// EDYTUJ ALERT';
-  document.getElementById('new-alert-title').value  = a.title;
-  document.getElementById('new-alert-date').value   = a.date;
-  document.getElementById('new-alert-note').value   = a.note||'';
-  openModal('modal-add-alert');
+  document.getElementById('new-alert-title').value         = a.title;
+  document.getElementById('new-alert-date').value          = a.date;
+  document.getElementById('new-alert-note').value          = a.note || '';
+  // Otwórz bezpośrednio bez reset
+  document.getElementById('modal-add-alert').classList.add('open');
 }
 
 async function toggleAlertDone(id) {
   const a = alertsList.find(x => x.id===id);
   if (!a) return;
   a.done = !a.done;
-  await saveAlert(a);
+  await saveAlertToDB(a);
 }
 
 async function delAlert(id) {
@@ -2129,7 +2136,7 @@ async function saveWalletForm() {
   const name  = document.getElementById('new-wallet-name').value.trim();
   const emoji = document.getElementById('new-wallet-emoji').value.trim() || '👛';
   const type  = document.getElementById('new-wallet-type').value;
-  if (!name) { alert('Wpisz nazwę portfela!'); return; }
+  if (!name) { showToast('⚠️ Wpisz nazwę portfela!'); return; }
   const addresses = [];
   document.querySelectorAll('#new-wallet-addresses .addr-row-form').forEach(row => {
     const inputs = row.querySelectorAll('input');
@@ -2408,8 +2415,7 @@ function exportProjects() {
 /* ============================================
    WHITELIST / WAITLIST
 ============================================ */
-let wlEntries = [];
-let wlFilter  = 'all';
+let wlFilter = 'all'; // wlEntries już zadeklarowane w STATE
 
 function saveWLToDB(entry) {
   setSyncing('syncing');
@@ -2610,7 +2616,7 @@ function openModal_wl_reset() {
 
 async function saveWLEntry() {
   const name = document.getElementById('wl-name').value.trim();
-  if (!name) { alert('Wpisz nazwę projektu!'); return; }
+  if (!name) { showToast('⚠️ Wpisz nazwę projektu!'); return; }
 
   const methods   = [...document.querySelectorAll('.wl-method-cb:checked')].map(cb => cb.value);
   const editId    = document.getElementById('edit-wl-id').value;
@@ -2689,20 +2695,7 @@ async function quickStatusWL(id, status) {
 
 // 1. Projekty ↔ Alerty — szybkie dodanie alertu z projektu
 function quickAddAlert(projectName) {
-  // Przygotuj modal alertu z nazwą projektu
-  document.getElementById('edit-alert-id').value = '';
-  document.getElementById('alert-modal-title').textContent = '// NOWY ALERT';
-  document.getElementById('new-alert-title').value = projectName ? `${projectName} — ` : '';
-  document.getElementById('new-alert-note').value  = '';
-  const tom = new Date(); tom.setDate(tom.getDate()+7);
-  document.getElementById('new-alert-date').value  = tom.toISOString().slice(0,10);
-  document.getElementById('modal-add-alert').classList.add('open');
-  // Ustaw kursor na końcu nazwy
-  setTimeout(() => {
-    const inp = document.getElementById('new-alert-title');
-    inp.focus();
-    inp.setSelectionRange(inp.value.length, inp.value.length);
-  }, 100);
+  openNewAlert(projectName ? `${projectName} — ` : '');
 }
 
 // 2. WL ↔ Alerty — utwórz alert z daty odbioru WL
