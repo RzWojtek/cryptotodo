@@ -265,15 +265,30 @@ main{max-width:1400px;margin:0 auto;padding:24px 20px}
 .progress-wrap{background:var(--bg3);border:1px solid var(--border);border-radius:20px;height:8px;overflow:hidden;margin-bottom:4px}
 .progress-bar{height:100%;background:linear-gradient(90deg,var(--green),var(--cyan));border-radius:20px;transition:width 0.5s ease;box-shadow:0 0 10px rgba(57,255,110,0.5)}
 .progress-label{font-family:var(--font-mono);font-size:11px;color:var(--text-muted);text-align:right;margin-top:4px;margin-bottom:20px}
-.tasks-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;margin-bottom:24px}
-.task-item{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;transition:all 0.2s;cursor:pointer}
-.task-item:hover{border-color:var(--border-glow)}
-.task-item.done{opacity:0.5;border-color:rgba(57,255,110,0.2)}
-.task-checkbox{width:20px;height:20px;border:2px solid var(--border-glow);border-radius:4px;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all 0.15s;font-size:12px}
+.tasks-grid{display:flex;flex-direction:column;gap:12px;margin-bottom:24px}
+.task-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;transition:border-color 0.2s}
+.task-card:hover{border-color:var(--border-glow)}
+.task-card.done{border-color:rgba(57,255,110,0.25)}
+.task-item{display:flex;align-items:center;gap:12px;padding:13px 16px;cursor:pointer;transition:background 0.15s}
+.task-item:hover{background:rgba(255,255,255,0.02)}
+.task-item.done{opacity:0.7}
+.task-checkbox{width:22px;height:22px;border:2px solid var(--border-glow);border-radius:5px;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all 0.15s;font-size:13px}
 .task-item.done .task-checkbox{background:var(--green);border-color:var(--green);box-shadow:var(--shadow-green)}
 .task-text{flex:1;font-size:15px;font-weight:600;transition:all 0.15s}
 .task-item.done .task-text{text-decoration:line-through;color:var(--text-muted)}
 .task-category{font-family:var(--font-mono);font-size:10px;padding:2px 8px;border-radius:10px;border:1px solid;flex-shrink:0}
+/* Miesięczny wykres wykonania */
+.task-chart-wrap{padding:8px 16px 12px;border-top:1px solid var(--border);background:var(--card2)}
+.task-chart-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.task-chart-label{font-family:var(--font-mono);font-size:10px;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase}
+.task-chart-count{font-family:var(--font-mono);font-size:11px;color:var(--green)}
+.task-chart-grid{display:flex;gap:3px;align-items:flex-end}
+.task-bar-wrap{display:flex;flex-direction:column;align-items:center;gap:2px;flex:1}
+.task-bar{width:100%;border-radius:2px 2px 0 0;min-height:3px;transition:height 0.3s ease,background 0.2s}
+.task-bar.done-bar{background:var(--green);box-shadow:0 0 4px rgba(57,255,110,0.4)}
+.task-bar.empty-bar{background:var(--border)}
+.task-bar.today-bar{background:var(--yellow);box-shadow:0 0 4px rgba(245,230,66,0.4)}
+.task-day-label{font-family:var(--font-mono);font-size:8px;color:var(--text-muted);text-align:center;line-height:1}
 .cat-defi{color:var(--cyan);border-color:rgba(0,212,255,0.3);background:rgba(0,212,255,0.06)}
 .cat-check{color:var(--yellow);border-color:rgba(245,230,66,0.3);background:rgba(245,230,66,0.06)}
 .cat-social{color:#a78bfa;border-color:rgba(167,139,250,0.3);background:rgba(167,139,250,0.06)}
@@ -1104,6 +1119,7 @@ function signInWithGoogle() {
 function signOut() {
   if (!confirm('Wylogować się?')) return;
   scratchLoaded = false;
+  window._viewApplied = false;
   auth.signOut();
 }
 
@@ -1150,9 +1166,10 @@ function setSyncing(state) {
 let projects   = [];
 let tasks      = [];
 let taskDone   = {};
+let taskHistory = {}; // { taskId: { 'YYYY-MM-DD': true } } — z Firebase
 let alertsList = [];
 let wallets    = [];
-let wlEntries  = []; // deklaracja tu — renderCard używa wlEntries wcześniej w kodzie
+let wlEntries  = [];
 
 /* ============================================
    INIT APP — nasłuchuj zmian z Firestore
@@ -1169,10 +1186,12 @@ function initApp() {
     userDoc('projects').orderBy('order').onSnapshot(snap => {
       projects = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       render();
+      // Zastosuj widok kompaktowy/karty tylko raz po pierwszym załadowaniu
+      if (!window._viewApplied) { window._viewApplied = true; setView(localStorage.getItem('todocrypto_view') || 'cards'); }
     }, () => {
-      // Brak kolekcji jeszcze — OK
       projects = [];
       render();
+      if (!window._viewApplied) { window._viewApplied = true; setView(localStorage.getItem('todocrypto_view') || 'cards'); }
     })
   );
 
@@ -1199,6 +1218,14 @@ function initApp() {
       wallets = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       if (currentTab === 'wallets') renderWallets();
     }, () => { wallets = []; })
+  );
+
+  // Słuchaj na historię wykonania zadań
+  unsubscribers.push(
+    userDoc('taskhistory').doc('data').onSnapshot(snap => {
+      taskHistory = snap.exists ? (snap.data().history || {}) : {};
+      if (currentTab === 'daily') renderDailyTasks();
+    }, () => { taskHistory = {}; })
   );
 
   // Inicjuj listener WL
@@ -1433,7 +1460,6 @@ function render() {
   });
 
   setTimeout(initDragDrop, 0);
-  setTimeout(() => setView(localStorage.getItem('todocrypto_view') || 'cards'), 0);
 }
 
 function updateStats() {
@@ -1866,23 +1892,81 @@ function renderDailyTasks() {
   }
 
   const catLabels2 = { defi:'DeFi', check:'Sprawdzenie', social:'Social', security:'Bezpieczeństwo', other:'Inne' };
+  const today = new Date();
+
+  // Przygotuj 30 dni (od 29 dni temu do dziś)
+  const last30 = [];
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(today.getDate() - i);
+    last30.push(d.toISOString().slice(0, 10));
+  }
+
   grid.innerHTML = tasks.map(t => {
-    const isDone = isTaskDoneToday(t.id);
+    const isDone  = isTaskDoneToday(t.id);
+    const taskHist = taskHistory[t.id] || {};
+    const doneCount = Object.keys(taskHist).filter(d => last30.includes(d)).length;
     const projTag = t.projectName
       ? `<span class="task-category" style="color:#a78bfa;border-color:rgba(167,139,250,0.3);background:rgba(167,139,250,0.06);cursor:pointer" onclick="event.stopPropagation();switchTab('projects');document.querySelector('[data-tab=projects]').click()" title="Przejdź do projektu">📁 ${esc(t.projectName)}</span>`
       : '';
-    return `<div class="task-item ${isDone?'done':''}" onclick="toggleTask('${t.id}')">
-      <div class="task-checkbox">${isDone?'✓':''}</div>
-      <div class="task-text">${esc(t.text)}</div>
-      ${projTag}
-      <span class="task-category cat-${t.cat||'defi'}">${catLabels2[t.cat]||t.cat}</span>
-      <button class="btn-icon" onclick="delTask(event,'${t.id}')">🗑</button></div>`;
+
+    // Słupki wykresu
+    const maxH = 28; // max wysokość px
+    const bars = last30.map((dateStr, idx) => {
+      const isToday    = dateStr === todayStr();
+      const wasDone    = !!taskHist[dateStr];
+      const dayNum     = parseInt(dateStr.slice(8));
+      const isFirst    = idx === 0 || dateStr.slice(8) === '01';
+      const showLabel  = isFirst || isToday || dayNum % 5 === 0;
+      const barCls     = isToday ? 'today-bar' : wasDone ? 'done-bar' : 'empty-bar';
+      const h          = wasDone || isToday && isDone ? maxH : wasDone ? maxH : 4;
+      const actualH    = (isToday && isDone) ? maxH : wasDone ? maxH : 4;
+      const label      = showLabel ? `<div class="task-day-label">${dayNum}</div>` : '<div class="task-day-label"></div>';
+      return `<div class="task-bar-wrap" title="${dateStr}${wasDone?' ✓':''}">
+        <div class="task-bar ${barCls}" style="height:${actualH}px"></div>
+        ${label}
+      </div>`;
+    }).join('');
+
+    return `
+    <div class="task-card ${isDone ? 'done' : ''}">
+      <div class="task-item ${isDone ? 'done' : ''}" onclick="toggleTask('${t.id}')">
+        <div class="task-checkbox">${isDone ? '✓' : ''}</div>
+        <div class="task-text">${esc(t.text)}</div>
+        ${projTag}
+        <span class="task-category cat-${t.cat||'defi'}">${catLabels2[t.cat]||t.cat}</span>
+        <button class="btn-icon" onclick="delTask(event,'${t.id}')" style="flex-shrink:0">🗑</button>
+      </div>
+      <div class="task-chart-wrap">
+        <div class="task-chart-header">
+          <span class="task-chart-label">Ostatnie 30 dni</span>
+          <span class="task-chart-count">✓ ${doneCount}/30 dni (${Math.round(doneCount/30*100)}%)</span>
+        </div>
+        <div class="task-chart-grid">${bars}</div>
+      </div>
+    </div>`;
   }).join('');
 }
 
+// Historia wykonania zadań — zapisywana w Firebase
+async function saveTaskHistoryToDB() {
+  try {
+    await userDoc('taskhistory').doc('data').set({ history: taskHistory, updatedAt: Date.now() });
+  } catch(e) { console.error('Historia zapis błąd:', e); }
+}
+
 function toggleTask(id) {
-  if (isTaskDoneToday(id)) delete taskDone[id]; else taskDone[id] = todayStr();
-  saveTaskDone(); renderDailyTasks();
+  const wasD = isTaskDoneToday(id);
+  if (wasD) delete taskDone[id]; else taskDone[id] = todayStr();
+  saveTaskDone();
+
+  // Zapisz do historii w Firebase
+  if (!taskHistory[id]) taskHistory[id] = {};
+  if (!wasD) taskHistory[id][todayStr()] = true;
+  else       delete taskHistory[id][todayStr()];
+  saveTaskHistoryToDB(); // async, nie blokuje UI
+
+  renderDailyTasks();
 }
 
 async function saveNewTask() {
