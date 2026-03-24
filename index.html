@@ -265,7 +265,8 @@ main{max-width:1400px;margin:0 auto;padding:24px 20px}
 .progress-wrap{background:var(--bg3);border:1px solid var(--border);border-radius:20px;height:8px;overflow:hidden;margin-bottom:4px}
 .progress-bar{height:100%;background:linear-gradient(90deg,var(--green),var(--cyan));border-radius:20px;transition:width 0.5s ease;box-shadow:0 0 10px rgba(57,255,110,0.5)}
 .progress-label{font-family:var(--font-mono);font-size:11px;color:var(--text-muted);text-align:right;margin-top:4px;margin-bottom:20px}
-.tasks-grid{display:flex;flex-direction:column;gap:12px;margin-bottom:24px}
+.tasks-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px}
+@media(max-width:768px){.tasks-grid{grid-template-columns:1fr}}
 .task-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;transition:border-color 0.2s}
 .task-card:hover{border-color:var(--border-glow)}
 .task-card.done{border-color:rgba(57,255,110,0.25)}
@@ -278,7 +279,13 @@ main{max-width:1400px;margin:0 auto;padding:24px 20px}
 .task-item.done .task-text{text-decoration:line-through;color:var(--text-muted)}
 .task-category{font-family:var(--font-mono);font-size:10px;padding:2px 8px;border-radius:10px;border:1px solid;flex-shrink:0}
 /* Miesięczny wykres wykonania */
-.task-chart-wrap{padding:8px 16px 12px;border-top:1px solid var(--border);background:var(--card2)}
+.task-chart-wrap{padding:0;border-top:1px solid var(--border);background:var(--card2);overflow:hidden;transition:max-height 0.3s ease,padding 0.3s ease;max-height:0}
+.task-chart-wrap.expanded{max-height:100px;padding:8px 16px 12px}
+.task-chart-toggle{display:flex;align-items:center;justify-content:space-between;padding:6px 16px;cursor:pointer;border-top:1px solid var(--border);background:var(--card2);transition:background 0.15s}
+.task-chart-toggle:hover{background:var(--bg3)}
+.task-chart-toggle-label{font-family:var(--font-mono);font-size:10px;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase}
+.task-chart-toggle-arrow{font-size:10px;color:var(--text-muted);transition:transform 0.3s}
+.task-chart-toggle.expanded .task-chart-toggle-arrow{transform:rotate(180deg)}
 .task-chart-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
 .task-chart-label{font-family:var(--font-mono);font-size:10px;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase}
 .task-chart-count{font-family:var(--font-mono);font-size:11px;color:var(--green)}
@@ -379,6 +386,16 @@ main{max-width:1400px;margin:0 auto;padding:24px 20px}
 .network-testnet {
   color:#f97316;border-color:rgba(249,115,22,0.4);background:rgba(249,115,22,0.08);
 }
+
+/* Project status badges */
+.proj-status-badge{font-family:var(--font-mono);font-size:10px;padding:2px 8px;border-radius:10px;border:1px solid;white-space:nowrap;flex-shrink:0;font-weight:700;letter-spacing:0.5px;cursor:pointer;transition:opacity 0.15s}
+.proj-status-badge:hover{opacity:0.8}
+.ps-active{color:var(--cyan);border-color:rgba(0,212,255,0.4);background:rgba(0,212,255,0.08)}
+.ps-in_progress{color:var(--yellow);border-color:rgba(245,230,66,0.4);background:rgba(245,230,66,0.08)}
+.ps-on_hold{color:#a78bfa;border-color:rgba(167,139,250,0.4);background:rgba(167,139,250,0.08)}
+.ps-completed{color:var(--text-muted);border-color:var(--border);background:var(--bg3)}
+/* Completed projects get dimmed */
+.project-card.status-completed{opacity:0.65}
 
 /* Network filter pills */
 .network-filter-wrap {
@@ -852,6 +869,72 @@ main{max-width:1400px;margin:0 auto;padding:24px 20px}
   </div>
 </div>
 
+<!-- Edytuj projekt -->
+<div class="modal-overlay" id="modal-edit-project">
+  <div class="modal" style="max-width:600px">
+    <div class="modal-header">
+      <div class="modal-title">// EDYTUJ PROJEKT</div>
+      <button class="modal-close" onclick="closeModal('modal-edit-project')">✕</button>
+    </div>
+    <input type="hidden" id="edit-project-id">
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <div class="form-group" style="flex:1;min-width:180px">
+        <label class="form-label">Nazwa projektu *</label>
+        <input type="text" class="form-input" id="edit-project-name" placeholder="np. UniSwap, Aave...">
+      </div>
+      <div class="form-group" style="flex:0 0 160px">
+        <label class="form-label">Status</label>
+        <select class="form-input" id="edit-project-status">
+          <option value="active">🟢 Aktywny</option>
+          <option value="in_progress">🔄 W toku</option>
+          <option value="on_hold">⏸ Wstrzymany</option>
+          <option value="completed">✅ Zakończony</option>
+        </select>
+      </div>
+    </div>
+    <div>
+      <label class="form-label">Linki do projektu</label>
+      <div id="edit-links-container"></div>
+      <button class="btn btn-ghost" style="margin-top:6px" onclick="addEditLinkRow()">+ Dodaj kolejny link</button>
+    </div>
+    <div class="form-group" style="margin-top:16px">
+      <label class="form-label">Notatki</label>
+      <textarea class="form-textarea" id="edit-project-notes" placeholder="Dodaj notatki..."></textarea>
+    </div>
+    <div class="form-group" style="margin-top:4px">
+      <label class="form-label">Typ sieci (opcjonalne)</label>
+      <div class="network-checkbox-row">
+        <label class="net-checkbox-label" id="edit-label-mainnet" onclick="selectEditNetwork('mainnet')">
+          <input type="radio" name="edit-project-network" value="mainnet" id="edit-radio-mainnet">
+          🟢 Mainnet
+        </label>
+        <label class="net-checkbox-label" id="edit-label-testnet" onclick="selectEditNetwork('testnet')">
+          <input type="radio" name="edit-project-network" value="testnet" id="edit-radio-testnet">
+          🟠 Testnet
+        </label>
+        <label class="net-checkbox-label" id="edit-label-none-net" onclick="selectEditNetwork('')">
+          <input type="radio" name="edit-project-network" value="" id="edit-radio-none-net" checked>
+          — Brak
+        </label>
+      </div>
+    </div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap">
+      <div class="form-group" style="flex:1;min-width:140px">
+        <label class="form-label">𝕏 Link X / Twitter</label>
+        <input type="text" class="form-input" id="edit-project-x" placeholder="https://x.com/...">
+      </div>
+      <div class="form-group" style="flex:1;min-width:140px">
+        <label class="form-label">💬 Link Discord</label>
+        <input type="text" class="form-input" id="edit-project-discord" placeholder="https://discord.gg/...">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-edit-project')">Anuluj</button>
+      <button class="btn btn-primary" onclick="saveEditProject()">Zapisz zmiany</button>
+    </div>
+  </div>
+</div>
+
 <!-- Dodaj link -->
 <div class="modal-overlay" id="modal-add-link">
   <div class="modal" style="max-width:460px">
@@ -936,27 +1019,40 @@ main{max-width:1400px;margin:0 auto;padding:24px 20px}
       <label class="form-label">Treść zadania *</label>
       <input type="text" class="form-input" id="new-task-text" placeholder="np. Sprawdź gas fees na L2...">
     </div>
-    <div style="display:flex;gap:10px;flex-wrap:wrap">
-      <div class="form-group" style="flex:1;min-width:140px">
-        <label class="form-label">Kategoria</label>
-        <select class="form-input" id="new-task-cat">
-          <option value="defi">⚡ DeFi</option>
-          <option value="check">✅ Sprawdzenie</option>
-          <option value="social">💬 Social / Discord</option>
-          <option value="security">🔐 Bezpieczeństwo</option>
-          <option value="other">📌 Inne</option>
-        </select>
-      </div>
-      <div class="form-group" style="flex:1;min-width:140px">
-        <label class="form-label">Projekt (opcjonalnie)</label>
-        <select class="form-input" id="new-task-project">
-          <option value="">— bez projektu</option>
-        </select>
-      </div>
+    <div class="form-group">
+      <label class="form-label">Projekt (opcjonalnie)</label>
+      <select class="form-input" id="new-task-project">
+        <option value="">— bez projektu</option>
+      </select>
     </div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal('modal-add-task')">Anuluj</button>
       <button class="btn btn-primary" onclick="saveNewTask()">Dodaj zadanie</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edytuj Daily Task -->
+<div class="modal-overlay" id="modal-edit-task">
+  <div class="modal" style="max-width:460px">
+    <div class="modal-header">
+      <div class="modal-title">// EDYTUJ ZADANIE</div>
+      <button class="modal-close" onclick="closeModal('modal-edit-task')">✕</button>
+    </div>
+    <input type="hidden" id="edit-task-id">
+    <div class="form-group">
+      <label class="form-label">Treść zadania *</label>
+      <input type="text" class="form-input" id="edit-task-text" placeholder="np. Sprawdź gas fees na L2...">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Projekt (opcjonalnie)</label>
+      <select class="form-input" id="edit-task-project-edit">
+        <option value="">— bez projektu</option>
+      </select>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-edit-task')">Anuluj</button>
+      <button class="btn btn-primary" onclick="saveEditTask()">Zapisz zmiany</button>
     </div>
   </div>
 </div>
@@ -1183,12 +1279,15 @@ function initApp() {
 
   // Słuchaj na projekty (real-time)
   unsubscribers.push(
-    userDoc('projects').orderBy('order').onSnapshot(snap => {
+    userDoc('projects').onSnapshot(snap => {
       projects = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      // Sortuj po order w pamięci (bez wymagania złożonego indeksu Firestore)
+      projects.sort((a, b) => (a.order ?? a.createdAt ?? 0) - (b.order ?? b.createdAt ?? 0));
       render();
       // Zastosuj widok kompaktowy/karty tylko raz po pierwszym załadowaniu
       if (!window._viewApplied) { window._viewApplied = true; setView(localStorage.getItem('todocrypto_view') || 'cards'); }
-    }, () => {
+    }, (err) => {
+      console.warn('Projekty onSnapshot błąd:', err);
       projects = [];
       render();
       if (!window._viewApplied) { window._viewApplied = true; setView(localStorage.getItem('todocrypto_view') || 'cards'); }
@@ -1429,6 +1528,14 @@ function render() {
   else if (currentNetFilter === 'testnet') list = list.filter(p => p.network === 'testnet');
   else if (currentNetFilter === 'none') list = list.filter(p => !p.network);
 
+  // Projekty zakończone lądują na końcu
+  list.sort((a, b) => {
+    const aComp = a.status === 'completed' ? 1 : 0;
+    const bComp = b.status === 'completed' ? 1 : 0;
+    if (aComp !== bComp) return aComp - bComp;
+    return (a.order ?? 0) - (b.order ?? 0);
+  });
+
   const grid = document.getElementById('projects-grid');
   if (!grid) return;
 
@@ -1489,8 +1596,16 @@ function renderCard(p) {
   const wlBadge = wlCount > 0
     ? `<span class="badge" style="border-color:rgba(167,139,250,0.4);color:#a78bfa;background:rgba(167,139,250,0.06);cursor:pointer" onclick="goToWL('${esc(p.name)}')" title="Przejdź do WL tego projektu">🎯 ${wlCount} WL</span>`
     : '';
+  let networkBadge = '';
   if (p.network === 'mainnet') networkBadge = `<span class="network-badge network-mainnet">MAINNET</span>`;
   else if (p.network === 'testnet') networkBadge = `<span class="network-badge network-testnet">TESTNET</span>`;
+
+  // Status badge
+  const statusLabels = { active:'🟢 Aktywny', in_progress:'🔄 W toku', on_hold:'⏸ Wstrzymany', completed:'✅ Zakończony' };
+  const statusClasses = { active:'ps-active', in_progress:'ps-in_progress', on_hold:'ps-on_hold', completed:'ps-completed' };
+  const ps = p.status || 'active';
+  const statusBadge = `<span class="proj-status-badge ${statusClasses[ps]||'ps-active'}" onclick="cycleProjectStatus('${p.id}')" title="Kliknij aby zmienić status">${statusLabels[ps]||'🟢 Aktywny'}</span>`;
+
   const xUrl = p.socialX || '', dcUrl = p.socialDiscord || '';
   let socialHtml = '';
   if (xUrl) socialHtml += `<a class="social-btn x-btn" href="${esc(xUrl)}" target="_blank" rel="noopener">${X_SVG} X</a>`;
@@ -1498,7 +1613,7 @@ function renderCard(p) {
   socialHtml += `<button class="social-edit-btn" onclick="openSocialEdit('${p.id}')">${xUrl||dcUrl?'✏️':'+ X/DC'}</button>`;
 
   return `
-<div class="project-card ${p.starred?'starred':''}" id="card-${p.id}">
+<div class="project-card ${p.starred?'starred':''} ${ps==='completed'?'status-completed':''}" id="card-${p.id}">
   <div class="card-header">
     <div class="drag-handle" draggable="true">⠿</div>
     <div class="project-name-wrap">
@@ -1506,6 +1621,7 @@ function renderCard(p) {
       <button class="project-name-edit-btn" onclick="startEditName('${p.id}')">✏️</button>
     </div>
     <div class="project-badges">
+      ${statusBadge}
       <span class="badge green">${linkCount} link${linkCount!==1?'i':''}</span>
       ${daysBadge}
       ${networkBadge}
@@ -1513,6 +1629,7 @@ function renderCard(p) {
     </div>
     <div class="card-social">${socialHtml}</div>
     <button class="btn-icon ${p.starred?'starred':''}" onclick="toggleStar('${p.id}')">⭐</button>
+    <button class="btn-icon" onclick="openEditProject('${p.id}')" title="Edytuj projekt">⚙️</button>
   </div>
   <div class="card-body">
     <div class="card-section">
@@ -1657,6 +1774,108 @@ async function toggleStar(id) {
   if (!p) return;
   p.starred = !p.starred;
   await saveProject(p);
+}
+
+const PROJECT_STATUSES = ['active','in_progress','on_hold','completed'];
+async function cycleProjectStatus(id) {
+  const p = projects.find(x => x.id === id);
+  if (!p) return;
+  const cur = p.status || 'active';
+  const idx = PROJECT_STATUSES.indexOf(cur);
+  p.status = PROJECT_STATUSES[(idx + 1) % PROJECT_STATUSES.length];
+  await saveProject(p);
+  const labels = { active:'🟢 Aktywny', in_progress:'🔄 W toku', on_hold:'⏸ Wstrzymany', completed:'✅ Zakończony' };
+  showToast(`Status: ${labels[p.status]}`);
+}
+
+function openEditProject(id) {
+  const p = projects.find(x => x.id === id);
+  if (!p) return;
+  document.getElementById('edit-project-id').value = id;
+  document.getElementById('edit-project-name').value = p.name;
+  document.getElementById('edit-project-notes').value = p.notes || '';
+  document.getElementById('edit-project-x').value = p.socialX || '';
+  document.getElementById('edit-project-discord').value = p.socialDiscord || '';
+  document.getElementById('edit-project-status').value = p.status || 'active';
+  selectEditNetwork(p.network || '');
+
+  // Linki
+  const cont = document.getElementById('edit-links-container');
+  cont.innerHTML = '';
+  const links = p.links && p.links.length ? p.links : [{ id: '', url: '', name: '' }];
+  links.forEach(l => {
+    const div = document.createElement('div'); div.className = 'link-row';
+    div.innerHTML = `<div class="link-row-inputs">
+      <input type="text" class="form-input link-url" placeholder="https://..." value="${esc(l.url)}">
+      <input type="text" class="form-input link-name" placeholder="Nazwa (opcjonalna)" value="${esc(l.name||'')}">
+    </div><button class="btn-icon" onclick="removeEditLinkRow(this)" style="color:var(--red);margin-top:2px">✕</button>`;
+    div.dataset.linkId = l.id || '';
+    cont.appendChild(div);
+  });
+
+  document.getElementById('modal-edit-project').classList.add('open');
+}
+
+function selectEditNetwork(val) {
+  ['mainnet','testnet',''].forEach(v => {
+    const id = v === '' ? 'edit-label-none-net' : `edit-label-${v}`;
+    const label = document.getElementById(id);
+    if (!label) return;
+    label.classList.remove('selected-mainnet','selected-testnet');
+    if (v === val) {
+      if (val === 'mainnet') label.classList.add('selected-mainnet');
+      if (val === 'testnet') label.classList.add('selected-testnet');
+    }
+  });
+  const radioId = val === '' ? 'edit-radio-none-net' : `edit-radio-${val}`;
+  const radio = document.getElementById(radioId);
+  if (radio) radio.checked = true;
+}
+
+function addEditLinkRow() {
+  const div = document.createElement('div'); div.className = 'link-row';
+  div.innerHTML = `<div class="link-row-inputs">
+    <input type="text" class="form-input link-url" placeholder="https://...">
+    <input type="text" class="form-input link-name" placeholder="Nazwa (opcjonalna)">
+  </div><button class="btn-icon" onclick="removeEditLinkRow(this)" style="color:var(--red);margin-top:2px">✕</button>`;
+  div.dataset.linkId = '';
+  document.getElementById('edit-links-container').appendChild(div);
+}
+
+function removeEditLinkRow(btn) {
+  const row = btn.closest('.link-row');
+  const container = document.getElementById('edit-links-container');
+  if (container.querySelectorAll('.link-row').length > 1) row.remove();
+  else row.querySelectorAll('input').forEach(i => i.value = '');
+}
+
+async function saveEditProject() {
+  const id   = document.getElementById('edit-project-id').value;
+  const name = document.getElementById('edit-project-name').value.trim();
+  if (!name) { showToast('⚠️ Wpisz nazwę projektu!'); return; }
+  const p = projects.find(x => x.id === id);
+  if (!p) return;
+
+  // Zbierz linki — zachowaj stare id jeśli istnieją
+  const links = [];
+  document.querySelectorAll('#edit-links-container .link-row').forEach(row => {
+    const url      = row.querySelector('.link-url').value.trim();
+    const linkName = row.querySelector('.link-name').value.trim();
+    const oldId    = row.dataset.linkId;
+    if (url) links.push({ id: oldId || genId(), url, name: linkName });
+  });
+
+  p.name          = name;
+  p.notes         = document.getElementById('edit-project-notes').value;
+  p.socialX       = document.getElementById('edit-project-x').value.trim();
+  p.socialDiscord = document.getElementById('edit-project-discord').value.trim();
+  p.status        = document.getElementById('edit-project-status').value;
+  p.network       = document.querySelector('input[name="edit-project-network"]:checked')?.value || '';
+  p.links         = links;
+
+  await saveProject(p);
+  closeModal('modal-edit-project');
+  showToast('✓ Projekt zaktualizowany!');
 }
 
 function startEditName(id) {
@@ -1891,7 +2110,6 @@ function renderDailyTasks() {
     return;
   }
 
-  const catLabels2 = { defi:'DeFi', check:'Sprawdzenie', social:'Social', security:'Bezpieczeństwo', other:'Inne' };
   const today = new Date();
 
   // Przygotuj 30 dni (od 29 dni temu do dziś)
@@ -1934,13 +2152,17 @@ function renderDailyTasks() {
         <div class="task-checkbox">${isDone ? '✓' : ''}</div>
         <div class="task-text">${esc(t.text)}</div>
         ${projTag}
-        <span class="task-category cat-${t.cat||'defi'}">${catLabels2[t.cat]||t.cat}</span>
+        <button class="btn-icon" onclick="event.stopPropagation();openEditTask('${t.id}')" style="flex-shrink:0" title="Edytuj zadanie">✏️</button>
         <button class="btn-icon" onclick="delTask(event,'${t.id}')" style="flex-shrink:0">🗑</button>
       </div>
-      <div class="task-chart-wrap">
+      <div class="task-chart-toggle" id="chart-toggle-${t.id}" onclick="toggleTaskChart('${t.id}')">
+        <span class="task-chart-toggle-label">📊 ${doneCount}/30 dni (${Math.round(doneCount/30*100)}%)</span>
+        <span class="task-chart-toggle-arrow">▼</span>
+      </div>
+      <div class="task-chart-wrap" id="chart-wrap-${t.id}">
         <div class="task-chart-header">
           <span class="task-chart-label">Ostatnie 30 dni</span>
-          <span class="task-chart-count">✓ ${doneCount}/30 dni (${Math.round(doneCount/30*100)}%)</span>
+          <span class="task-chart-count">✓ ${doneCount}/30 dni</span>
         </div>
         <div class="task-chart-grid">${bars}</div>
       </div>
@@ -1977,7 +2199,7 @@ async function saveNewTask() {
   const t = {
     id: genId(),
     text,
-    cat:      document.getElementById('new-task-cat').value,
+    cat: 'other',
     projectId,
     projectName,
     createdAt: Date.now()
@@ -1993,6 +2215,41 @@ async function delTask(e, id) {
   await deleteTaskFromDB(id);
   delete taskDone[id]; saveTaskDone();
   showToast('🗑 Zadanie usunięte');
+}
+
+function toggleTaskChart(id) {
+  const wrap   = document.getElementById('chart-wrap-' + id);
+  const toggle = document.getElementById('chart-toggle-' + id);
+  if (!wrap || !toggle) return;
+  const isExpanded = wrap.classList.contains('expanded');
+  wrap.classList.toggle('expanded', !isExpanded);
+  toggle.classList.toggle('expanded', !isExpanded);
+}
+
+function openEditTask(id) {
+  const t = tasks.find(x => x.id === id);
+  if (!t) return;
+  document.getElementById('edit-task-id').value = id;
+  document.getElementById('edit-task-text').value = t.text;
+  const projSel = document.getElementById('edit-task-project-edit');
+  projSel.innerHTML = '<option value="">— bez projektu</option>' +
+    projects.map(p => `<option value="${esc(p.id)}" ${p.id === t.projectId ? 'selected' : ''}>${esc(p.name)}</option>`).join('');
+  document.getElementById('modal-edit-task').classList.add('open');
+}
+
+async function saveEditTask() {
+  const id   = document.getElementById('edit-task-id').value;
+  const text = document.getElementById('edit-task-text').value.trim();
+  if (!text) { showToast('⚠️ Wpisz treść zadania!'); return; }
+  const t = tasks.find(x => x.id === id);
+  if (!t) return;
+  const projectId = document.getElementById('edit-task-project-edit').value;
+  t.text        = text;
+  t.projectId   = projectId;
+  t.projectName = projectId ? (projects.find(p => p.id === projectId)?.name || '') : '';
+  await saveTask(t);
+  closeModal('modal-edit-task');
+  showToast('✓ Zadanie zaktualizowane!');
 }
 
 function resetDailyTasks() {
