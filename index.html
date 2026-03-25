@@ -1180,29 +1180,12 @@ let currentUser = null;
    AUTH
 ============================================ */
 function signInWithGoogle() {
-  const btn     = document.getElementById('login-btn');
-  const loading = document.getElementById('login-loading');
-  const errorEl = document.getElementById('login-error');
-
-  errorEl.textContent = '';
-  loading.classList.remove('hidden');
-  btn.disabled = true;
-
+  document.getElementById('login-error').textContent = '';
+  document.getElementById('login-loading').classList.remove('hidden');
   const provider = new firebase.auth.GoogleAuthProvider();
-  provider.setCustomParameters({ prompt: 'select_account' });
-
   auth.signInWithPopup(provider).catch(err => {
-    loading.classList.add('hidden');
-    btn.disabled = false;
-    if (err.code === 'auth/popup-closed-by-user') {
-      // Użytkownik sam zamknął — brak komunikatu
-      return;
-    }
-    if (err.code === 'auth/popup-blocked') {
-      errorEl.textContent = '⚠️ Popup zablokowany. Odblokuj popupy dla tej strony i spróbuj ponownie.';
-      return;
-    }
-    errorEl.textContent = '✗ ' + (err.message || 'Błąd logowania. Spróbuj ponownie.');
+    document.getElementById('login-error').textContent = '✗ ' + err.message;
+    document.getElementById('login-loading').classList.add('hidden');
   });
 }
 
@@ -1214,12 +1197,6 @@ function signOut() {
 
 auth.onAuthStateChanged(user => {
   currentUser = user;
-  // Zawsze ukryj loading i odblokuj przycisk
-  const loading = document.getElementById('login-loading');
-  const btn     = document.getElementById('login-btn');
-  if (loading) loading.classList.add('hidden');
-  if (btn)     btn.disabled = false;
-
   if (user) {
     document.getElementById('login-screen').classList.add('hidden');
     document.getElementById('app-wrapper').style.display = 'block';
@@ -1233,6 +1210,7 @@ auth.onAuthStateChanged(user => {
   } else {
     document.getElementById('login-screen').classList.remove('hidden');
     document.getElementById('app-wrapper').style.display = 'none';
+    document.getElementById('login-loading').classList.add('hidden');
   }
 });
 
@@ -1664,7 +1642,6 @@ function renderCard(p) {
     <button class="btn btn-secondary" style="font-size:12px;padding:5px 12px" onclick="duplicateProject('${p.id}')">⧉ Duplikuj</button>
     <button class="btn btn-danger" onclick="deleteProject('${p.id}')">🗑</button>
   </div>
-</div>`;
 </div>`;
 }
 
