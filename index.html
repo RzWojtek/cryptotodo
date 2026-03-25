@@ -265,29 +265,35 @@ main{max-width:1400px;margin:0 auto;padding:24px 20px}
 .progress-wrap{background:var(--bg3);border:1px solid var(--border);border-radius:20px;height:8px;overflow:hidden;margin-bottom:4px}
 .progress-bar{height:100%;background:linear-gradient(90deg,var(--green),var(--cyan));border-radius:20px;transition:width 0.5s ease;box-shadow:0 0 10px rgba(57,255,110,0.5)}
 .progress-label{font-family:var(--font-mono);font-size:11px;color:var(--text-muted);text-align:right;margin-top:4px;margin-bottom:20px}
-.tasks-grid{display:flex;flex-direction:column;gap:12px;margin-bottom:24px}
-.task-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;transition:border-color 0.2s}
+.tasks-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px}
+@media(max-width:700px){.tasks-grid{grid-template-columns:1fr}}
+.task-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;transition:border-color 0.2s;display:flex;flex-direction:column}
 .task-card:hover{border-color:var(--border-glow)}
 .task-card.done{border-color:rgba(57,255,110,0.25)}
-.task-item{display:flex;align-items:center;gap:12px;padding:13px 16px;cursor:pointer;transition:background 0.15s}
+.task-item{display:flex;align-items:center;gap:12px;padding:13px 16px;cursor:pointer;transition:background 0.15s;flex:1}
 .task-item:hover{background:rgba(255,255,255,0.02)}
 .task-item.done{opacity:0.7}
 .task-checkbox{width:22px;height:22px;border:2px solid var(--border-glow);border-radius:5px;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all 0.15s;font-size:13px}
-.task-item.done .task-checkbox{background:var(--green);border-color:var(--green);box-shadow:var(--shadow-green)}
-.task-text{flex:1;font-size:15px;font-weight:600;transition:all 0.15s}
+.task-item.done .task-checkbox{background:var(--green);border-color:var(--green)}
+.task-text{flex:1;font-size:14px;font-weight:600;transition:all 0.15s;line-height:1.4}
 .task-item.done .task-text{text-decoration:line-through;color:var(--text-muted)}
 .task-category{font-family:var(--font-mono);font-size:10px;padding:2px 8px;border-radius:10px;border:1px solid;flex-shrink:0}
-/* Miesięczny wykres wykonania */
-.task-chart-wrap{padding:8px 16px 12px;border-top:1px solid var(--border);background:var(--card2)}
-.task-chart-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
-.task-chart-label{font-family:var(--font-mono);font-size:10px;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase}
+/* Zwijany wykres */
+.task-chart-toggle{display:flex;align-items:center;justify-content:space-between;padding:6px 16px;border-top:1px solid var(--border);background:var(--card2);cursor:pointer;transition:background 0.15s;user-select:none}
+.task-chart-toggle:hover{background:var(--bg3)}
+.task-chart-toggle-label{font-family:var(--font-mono);font-size:10px;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase}
+.task-chart-toggle-right{display:flex;align-items:center;gap:8px}
 .task-chart-count{font-family:var(--font-mono);font-size:11px;color:var(--green)}
-.task-chart-grid{display:flex;gap:3px;align-items:flex-end}
+.task-chart-arrow{font-size:10px;color:var(--text-muted);transition:transform 0.2s}
+.task-chart-arrow.open{transform:rotate(180deg)}
+.task-chart-body{padding:8px 16px 12px;border-top:1px dashed var(--border);background:var(--card2);display:none}
+.task-chart-body.open{display:block}
+.task-chart-grid{display:flex;gap:2px;align-items:flex-end;margin-top:4px}
 .task-bar-wrap{display:flex;flex-direction:column;align-items:center;gap:2px;flex:1}
-.task-bar{width:100%;border-radius:2px 2px 0 0;min-height:3px;transition:height 0.3s ease,background 0.2s}
-.task-bar.done-bar{background:var(--green);box-shadow:0 0 4px rgba(57,255,110,0.4)}
+.task-bar{width:100%;border-radius:2px 2px 0 0;min-height:3px;transition:height 0.3s ease}
+.task-bar.done-bar{background:var(--green)}
 .task-bar.empty-bar{background:var(--border)}
-.task-bar.today-bar{background:var(--yellow);box-shadow:0 0 4px rgba(245,230,66,0.4)}
+.task-bar.today-bar{background:var(--yellow)}
 .task-day-label{font-family:var(--font-mono);font-size:8px;color:var(--text-muted);text-align:center;line-height:1}
 .cat-defi{color:var(--cyan);border-color:rgba(0,212,255,0.3);background:rgba(0,212,255,0.06)}
 .cat-check{color:var(--yellow);border-color:rgba(245,230,66,0.3);background:rgba(245,230,66,0.06)}
@@ -364,6 +370,17 @@ main{max-width:1400px;margin:0 auto;padding:24px 20px}
 .import-preview-card .name{flex:1;font-weight:700;font-size:14px;color:var(--text)}
 .import-preview-card .meta{font-family:var(--font-mono);font-size:11px;color:var(--text-muted)}
 .format-code{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);color:var(--green);font-family:var(--font-mono);font-size:11px;line-height:1.6;padding:14px;overflow-x:auto;white-space:pre;max-height:260px;overflow-y:auto}
+
+
+/* PROJECT STATUS BADGES */
+.proj-status{font-family:var(--font-mono);font-size:10px;padding:2px 8px;border-radius:10px;border:1px solid;white-space:nowrap;flex-shrink:0;font-weight:700}
+.ps-active   {color:#39ff6e;border-color:rgba(57,255,110,0.4);background:rgba(57,255,110,0.08)}
+.ps-watching {color:var(--cyan);border-color:rgba(0,212,255,0.3);background:rgba(0,212,255,0.06)}
+.ps-paused   {color:#f5e642;border-color:rgba(245,230,66,0.3);background:rgba(245,230,66,0.06)}
+.ps-done     {color:var(--text-muted);border-color:var(--border);background:var(--bg3)}
+.ps-abandoned{color:var(--red);border-color:rgba(255,56,100,0.3);background:rgba(255,56,100,0.06)}
+.project-card.proj-done{opacity:0.6}
+.project-card.proj-done:hover{opacity:0.85}
 
 /* ============================================
    NETWORK TYPE BADGES (mainnet/testnet)
@@ -845,9 +862,76 @@ main{max-width:1400px;margin:0 auto;padding:24px 20px}
         <input type="text" class="form-input" id="new-project-discord" placeholder="https://discord.gg/...">
       </div>
     </div>
+    <div class="form-group">
+      <label class="form-label">Status projektu</label>
+      <select class="form-input" id="new-project-status">
+        <option value="active">🟢 W toku</option>
+        <option value="watching">👀 Obserwuję</option>
+        <option value="paused">⏸ Wstrzymany</option>
+        <option value="done">✅ Zakończony</option>
+        <option value="abandoned">❌ Porzucony</option>
+      </select>
+    </div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal('modal-add-project')">Anuluj</button>
       <button class="btn btn-primary" onclick="saveNewProject()">Zapisz projekt</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edytuj projekt -->
+<div class="modal-overlay" id="modal-edit-project">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-header">
+      <div class="modal-title">// EDYTUJ PROJEKT</div>
+      <button class="modal-close" onclick="closeModal('modal-edit-project')">✕</button>
+    </div>
+    <input type="hidden" id="ep-id">
+    <div class="form-group">
+      <label class="form-label">Nazwa projektu *</label>
+      <input type="text" class="form-input" id="ep-name" placeholder="np. UniSwap, Aave...">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Notatki</label>
+      <textarea class="form-textarea" id="ep-notes" placeholder="Dodaj notatki..."></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Status projektu</label>
+      <select class="form-input" id="ep-status">
+        <option value="active">🟢 W toku</option>
+        <option value="watching">👀 Obserwuję</option>
+        <option value="paused">⏸ Wstrzymany</option>
+        <option value="done">✅ Zakończony</option>
+        <option value="abandoned">❌ Porzucony</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Typ sieci</label>
+      <div class="network-checkbox-row" style="margin-top:6px">
+        <label class="net-checkbox-label" id="ep-label-mainnet" onclick="epSelectNetwork('mainnet')">
+          <input type="radio" name="ep-network" value="mainnet" id="ep-radio-mainnet"> 🟢 Mainnet
+        </label>
+        <label class="net-checkbox-label" id="ep-label-testnet" onclick="epSelectNetwork('testnet')">
+          <input type="radio" name="ep-network" value="testnet" id="ep-radio-testnet"> 🟠 Testnet
+        </label>
+        <label class="net-checkbox-label" id="ep-label-none" onclick="epSelectNetwork('')">
+          <input type="radio" name="ep-network" value="" id="ep-radio-none" checked> — Brak
+        </label>
+      </div>
+    </div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap">
+      <div class="form-group" style="flex:1;min-width:140px">
+        <label class="form-label">𝕏 Link X / Twitter</label>
+        <input type="text" class="form-input" id="ep-x" placeholder="https://x.com/...">
+      </div>
+      <div class="form-group" style="flex:1;min-width:140px">
+        <label class="form-label">💬 Link Discord</label>
+        <input type="text" class="form-input" id="ep-discord" placeholder="https://discord.gg/...">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-edit-project')">Anuluj</button>
+      <button class="btn btn-primary" onclick="saveEditProject()">Zapisz zmiany</button>
     </div>
   </div>
 </div>
@@ -929,34 +1013,23 @@ main{max-width:1400px;margin:0 auto;padding:24px 20px}
 <div class="modal-overlay" id="modal-add-task">
   <div class="modal" style="max-width:460px">
     <div class="modal-header">
-      <div class="modal-title">// NOWE ZADANIE</div>
+      <div class="modal-title" id="task-modal-title">// NOWE ZADANIE</div>
       <button class="modal-close" onclick="closeModal('modal-add-task')">✕</button>
     </div>
+    <input type="hidden" id="edit-task-id">
     <div class="form-group">
       <label class="form-label">Treść zadania *</label>
       <input type="text" class="form-input" id="new-task-text" placeholder="np. Sprawdź gas fees na L2...">
     </div>
-    <div style="display:flex;gap:10px;flex-wrap:wrap">
-      <div class="form-group" style="flex:1;min-width:140px">
-        <label class="form-label">Kategoria</label>
-        <select class="form-input" id="new-task-cat">
-          <option value="defi">⚡ DeFi</option>
-          <option value="check">✅ Sprawdzenie</option>
-          <option value="social">💬 Social / Discord</option>
-          <option value="security">🔐 Bezpieczeństwo</option>
-          <option value="other">📌 Inne</option>
-        </select>
-      </div>
-      <div class="form-group" style="flex:1;min-width:140px">
-        <label class="form-label">Projekt (opcjonalnie)</label>
-        <select class="form-input" id="new-task-project">
-          <option value="">— bez projektu</option>
-        </select>
-      </div>
+    <div class="form-group">
+      <label class="form-label">Projekt (opcjonalnie)</label>
+      <select class="form-input" id="new-task-project">
+        <option value="">— bez projektu</option>
+      </select>
     </div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal('modal-add-task')">Anuluj</button>
-      <button class="btn btn-primary" onclick="saveNewTask()">Dodaj zadanie</button>
+      <button class="btn btn-primary" id="task-save-btn" onclick="saveTaskForm()">Dodaj zadanie</button>
     </div>
   </div>
 </div>
@@ -1119,7 +1192,6 @@ function signInWithGoogle() {
 function signOut() {
   if (!confirm('Wylogować się?')) return;
   scratchLoaded = false;
-  window._viewApplied = false;
   auth.signOut();
 }
 
@@ -1182,16 +1254,23 @@ function initApp() {
   renderDailyDateLabel();
 
   // Słuchaj na projekty (real-time)
+  let firstProjectLoad = true;
   unsubscribers.push(
     userDoc('projects').orderBy('order').onSnapshot(snap => {
       projects = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       render();
-      // Zastosuj widok kompaktowy/karty tylko raz po pierwszym załadowaniu
-      if (!window._viewApplied) { window._viewApplied = true; setView(localStorage.getItem('todocrypto_view') || 'cards'); }
+      if (firstProjectLoad) {
+        firstProjectLoad = false;
+        // Zastosuj widok po pierwszym załadowaniu (bez setTimeout żeby nie było race)
+        const v = localStorage.getItem('todocrypto_view') || 'cards';
+        const grid = document.getElementById('projects-grid');
+        if (grid) grid.classList.toggle('compact', v === 'compact');
+        document.getElementById('view-cards-btn')?.classList.toggle('active', v === 'cards');
+        document.getElementById('view-compact-btn')?.classList.toggle('active', v === 'compact');
+      }
     }, () => {
       projects = [];
       render();
-      if (!window._viewApplied) { window._viewApplied = true; setView(localStorage.getItem('todocrypto_view') || 'cards'); }
     })
   );
 
@@ -1358,7 +1437,15 @@ function openModal(id) {
   document.getElementById(id).classList.add('open');
   if (id === 'modal-import') { updateFormatExample(); clearImportPreview(); }
   if (id === 'modal-add-wl') { /* reset tylko przy nowym WL — patrz openNewWL() i editWLEntry() */ }
-  if (id === 'modal-add-task') populateTaskProjectSelect();
+  if (id === 'modal-add-task') {
+    populateTaskProjectSelect();
+    // Reset do trybu "nowe zadanie" tylko jeśli nie otwieramy z editTask
+    if (!document.getElementById('edit-task-id').value) {
+      document.getElementById('task-modal-title').textContent = '// NOWE ZADANIE';
+      document.getElementById('new-task-text').value = '';
+      document.getElementById('task-save-btn').textContent = 'Dodaj zadanie';
+    }
+  }
   if (id === 'modal-add-alert') { /* reset tylko przy nowym alercie — patrz openNewAlert() */ }
 }
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
@@ -1401,7 +1488,7 @@ let currentNetFilter = 'all'; // 'all' | 'mainnet' | 'testnet' | 'none'
 
 function setNetFilter(v) {
   currentNetFilter = v;
-  document.querySelectorAll('.net-filter-btn').forEach(b => {
+  document.querySelectorAll('.net-filter-btn[data-net]').forEach(b => {
     b.classList.remove('active-all','active-mainnet','active-testnet');
   });
   const btn = document.querySelector(`.net-filter-btn[data-net="${v}"]`);
@@ -1429,8 +1516,14 @@ function render() {
   else if (currentNetFilter === 'testnet') list = list.filter(p => p.network === 'testnet');
   else if (currentNetFilter === 'none') list = list.filter(p => !p.network);
 
+  // Zakończone i porzucone na koniec listy
+  list.sort((a, b) => {
+    const aEnd = (a.status === 'done' || a.status === 'abandoned') ? 1 : 0;
+    const bEnd = (b.status === 'done' || b.status === 'abandoned') ? 1 : 0;
+    return aEnd - bEnd;
+  });
+
   const grid = document.getElementById('projects-grid');
-  if (!grid) return;
 
   if (!list.length) {
     grid.innerHTML = `<div class="empty-state">
@@ -1477,28 +1570,45 @@ function renderCard(p) {
   let daysBadge = '';
   if (p.createdAt) {
     const days = Math.floor((Date.now() - p.createdAt) / 86400000);
-    let cls = days <= 1 ? 'new-proj' : days <= 7 ? 'week-proj' : '';
+    const cls = days <= 1 ? 'new-proj' : days <= 7 ? 'week-proj' : '';
     const label = days === 0 ? 'dziś' : days === 1 ? 'wczoraj' : `${days} dni`;
     daysBadge = `<span class="days-badge ${cls}">${label}</span>`;
   }
-  // Badge WL — ile aktywnych WL dla tego projektu
+  // Status badge
+  const statusMap = {
+    active:    {cls:'ps-active',    label:'🟢 W toku'},
+    watching:  {cls:'ps-watching',  label:'👀 Obserwuję'},
+    paused:    {cls:'ps-paused',    label:'⏸ Wstrzymany'},
+    done:      {cls:'ps-done',      label:'✅ Zakończony'},
+    abandoned: {cls:'ps-abandoned', label:'❌ Porzucony'},
+  };
+  const st = statusMap[p.status] || statusMap.active;
+  const statusBadge = `<span class="proj-status ${st.cls}">${st.label}</span>`;
+
+  // Badge WL
   const wlCount = wlEntries.filter(w =>
     w.name.toLowerCase() === p.name.toLowerCase() ||
     (w.projectId && w.projectId === p.id)
   ).length;
   const wlBadge = wlCount > 0
-    ? `<span class="badge" style="border-color:rgba(167,139,250,0.4);color:#a78bfa;background:rgba(167,139,250,0.06);cursor:pointer" onclick="goToWL('${esc(p.name)}')" title="Przejdź do WL tego projektu">🎯 ${wlCount} WL</span>`
+    ? `<span class="badge" style="border-color:rgba(167,139,250,0.4);color:#a78bfa;background:rgba(167,139,250,0.06);cursor:pointer" onclick="goToWL('${esc(p.name)}')" title="WL tego projektu">🎯 ${wlCount} WL</span>`
     : '';
+
+  // Network badge
+  let networkBadge = '';
   if (p.network === 'mainnet') networkBadge = `<span class="network-badge network-mainnet">MAINNET</span>`;
   else if (p.network === 'testnet') networkBadge = `<span class="network-badge network-testnet">TESTNET</span>`;
+
   const xUrl = p.socialX || '', dcUrl = p.socialDiscord || '';
   let socialHtml = '';
   if (xUrl) socialHtml += `<a class="social-btn x-btn" href="${esc(xUrl)}" target="_blank" rel="noopener">${X_SVG} X</a>`;
   if (dcUrl) socialHtml += `<a class="social-btn discord-btn" href="${esc(dcUrl)}" target="_blank" rel="noopener">${DC_SVG} Discord</a>`;
   socialHtml += `<button class="social-edit-btn" onclick="openSocialEdit('${p.id}')">${xUrl||dcUrl?'✏️':'+ X/DC'}</button>`;
 
+  const isDone = p.status === 'done' || p.status === 'abandoned';
+
   return `
-<div class="project-card ${p.starred?'starred':''}" id="card-${p.id}">
+<div class="project-card ${p.starred?'starred':''} ${isDone?'proj-done':''}" id="card-${p.id}">
   <div class="card-header">
     <div class="drag-handle" draggable="true">⠿</div>
     <div class="project-name-wrap">
@@ -1506,6 +1616,7 @@ function renderCard(p) {
       <button class="project-name-edit-btn" onclick="startEditName('${p.id}')">✏️</button>
     </div>
     <div class="project-badges">
+      ${statusBadge}
       <span class="badge green">${linkCount} link${linkCount!==1?'i':''}</span>
       ${daysBadge}
       ${networkBadge}
@@ -1529,10 +1640,12 @@ function renderCard(p) {
     </div>
   </div>
   <div class="card-footer">
-    <button class="btn btn-secondary" style="font-size:12px;padding:5px 12px" onclick="quickAddAlert('${esc(p.name)}')">🔔 + Alert</button>
+    <button class="btn btn-secondary" style="font-size:12px;padding:5px 12px" onclick="openEditProject('${p.id}')">✏️ Edytuj</button>
+    <button class="btn btn-secondary" style="font-size:12px;padding:5px 12px" onclick="quickAddAlert('${esc(p.name)}')">🔔 Alert</button>
     <button class="btn btn-secondary" style="font-size:12px;padding:5px 12px" onclick="duplicateProject('${p.id}')">⧉ Duplikuj</button>
-    <button class="btn btn-danger" onclick="deleteProject('${p.id}')">🗑 Usuń projekt</button>
+    <button class="btn btn-danger" onclick="deleteProject('${p.id}')">🗑</button>
   </div>
+</div>`;
 </div>`;
 }
 
@@ -1623,17 +1736,60 @@ async function saveNewProject() {
   const network = document.querySelector('input[name="new-project-network"]:checked')?.value || '';
   const p = {
     id: genId(), name, links,
-    notes: document.getElementById('new-project-notes').value,
-    starred: false,
+    notes:         document.getElementById('new-project-notes').value,
+    starred:       false,
     network,
-    socialX: document.getElementById('new-project-x').value.trim(),
+    status:        document.getElementById('new-project-status').value || 'active',
+    socialX:       document.getElementById('new-project-x').value.trim(),
     socialDiscord: document.getElementById('new-project-discord').value.trim(),
-    createdAt: Date.now(),
-    order: Date.now()
+    createdAt:     Date.now(),
+    order:         Date.now()
   };
   await saveProject(p);
   closeModal('modal-add-project');
   showToast('✓ Projekt dodany!');
+}
+
+function epSelectNetwork(val) {
+  ['mainnet','testnet',''].forEach(v => {
+    const lbl = document.getElementById('ep-label-' + (v || 'none'));
+    if (lbl) lbl.classList.toggle('selected-' + (v || 'none-net'), false);
+  });
+  document.getElementById('ep-label-mainnet')?.classList.toggle('selected-mainnet', val === 'mainnet');
+  document.getElementById('ep-label-testnet')?.classList.toggle('selected-testnet', val === 'testnet');
+  const radio = document.querySelector(`input[name="ep-network"][value="${val}"]`);
+  if (radio) radio.checked = true;
+}
+
+function openEditProject(id) {
+  const p = projects.find(x => x.id === id);
+  if (!p) return;
+  document.getElementById('ep-id').value      = p.id;
+  document.getElementById('ep-name').value    = p.name;
+  document.getElementById('ep-notes').value   = p.notes || '';
+  document.getElementById('ep-status').value  = p.status || 'active';
+  document.getElementById('ep-x').value       = p.socialX || '';
+  document.getElementById('ep-discord').value = p.socialDiscord || '';
+  // Sieć
+  epSelectNetwork(p.network || '');
+  document.getElementById('modal-edit-project').classList.add('open');
+}
+
+async function saveEditProject() {
+  const id   = document.getElementById('ep-id').value;
+  const name = document.getElementById('ep-name').value.trim();
+  if (!name) { showToast('⚠️ Wpisz nazwę projektu!'); return; }
+  const p = projects.find(x => x.id === id);
+  if (!p) return;
+  p.name         = name;
+  p.notes        = document.getElementById('ep-notes').value;
+  p.status       = document.getElementById('ep-status').value;
+  p.socialX      = document.getElementById('ep-x').value.trim();
+  p.socialDiscord= document.getElementById('ep-discord').value.trim();
+  p.network      = document.querySelector('input[name="ep-network"]:checked')?.value || '';
+  await saveProject(p);
+  closeModal('modal-edit-project');
+  showToast('✓ Projekt zaktualizowany!');
 }
 
 async function deleteProject(id) {
@@ -1891,57 +2047,51 @@ function renderDailyTasks() {
     return;
   }
 
-  const catLabels2 = { defi:'DeFi', check:'Sprawdzenie', social:'Social', security:'Bezpieczeństwo', other:'Inne' };
   const today = new Date();
-
-  // Przygotuj 30 dni (od 29 dni temu do dziś)
   const last30 = [];
   for (let i = 29; i >= 0; i--) {
-    const d = new Date(today);
-    d.setDate(today.getDate() - i);
+    const d = new Date(today); d.setDate(today.getDate() - i);
     last30.push(d.toISOString().slice(0, 10));
   }
 
   grid.innerHTML = tasks.map(t => {
-    const isDone  = isTaskDoneToday(t.id);
+    const isDone   = isTaskDoneToday(t.id);
     const taskHist = taskHistory[t.id] || {};
     const doneCount = Object.keys(taskHist).filter(d => last30.includes(d)).length;
     const projTag = t.projectName
-      ? `<span class="task-category" style="color:#a78bfa;border-color:rgba(167,139,250,0.3);background:rgba(167,139,250,0.06);cursor:pointer" onclick="event.stopPropagation();switchTab('projects');document.querySelector('[data-tab=projects]').click()" title="Przejdź do projektu">📁 ${esc(t.projectName)}</span>`
+      ? `<span style="font-family:var(--font-mono);font-size:10px;padding:2px 7px;border-radius:8px;border:1px solid rgba(167,139,250,0.3);color:#a78bfa;background:rgba(167,139,250,0.06);cursor:pointer;flex-shrink:0" onclick="event.stopPropagation();switchTab('projects');document.querySelector('[data-tab=projects]').click()" title="Przejdź do projektu">📁 ${esc(t.projectName)}</span>`
       : '';
 
-    // Słupki wykresu
-    const maxH = 28; // max wysokość px
-    const bars = last30.map((dateStr, idx) => {
-      const isToday    = dateStr === todayStr();
-      const wasDone    = !!taskHist[dateStr];
-      const dayNum     = parseInt(dateStr.slice(8));
-      const isFirst    = idx === 0 || dateStr.slice(8) === '01';
-      const showLabel  = isFirst || isToday || dayNum % 5 === 0;
-      const barCls     = isToday ? 'today-bar' : wasDone ? 'done-bar' : 'empty-bar';
-      const h          = wasDone || isToday && isDone ? maxH : wasDone ? maxH : 4;
-      const actualH    = (isToday && isDone) ? maxH : wasDone ? maxH : 4;
-      const label      = showLabel ? `<div class="task-day-label">${dayNum}</div>` : '<div class="task-day-label"></div>';
+    const bars = last30.map((dateStr) => {
+      const isToday = dateStr === todayStr();
+      const wasDone = !!taskHist[dateStr];
+      const dayNum  = parseInt(dateStr.slice(8));
+      const showLbl = dayNum === 1 || dayNum % 5 === 0 || isToday;
+      const barCls  = (isToday && isDone) ? 'today-bar' : wasDone ? 'done-bar' : 'empty-bar';
+      const h       = wasDone || (isToday && isDone) ? 24 : 4;
       return `<div class="task-bar-wrap" title="${dateStr}${wasDone?' ✓':''}">
-        <div class="task-bar ${barCls}" style="height:${actualH}px"></div>
-        ${label}
+        <div class="task-bar ${barCls}" style="height:${h}px"></div>
+        <div class="task-day-label">${showLbl ? dayNum : ''}</div>
       </div>`;
     }).join('');
 
     return `
-    <div class="task-card ${isDone ? 'done' : ''}">
-      <div class="task-item ${isDone ? 'done' : ''}" onclick="toggleTask('${t.id}')">
-        <div class="task-checkbox">${isDone ? '✓' : ''}</div>
+    <div class="task-card ${isDone?'done':''}" id="tcard-${t.id}">
+      <div class="task-item ${isDone?'done':''}" onclick="toggleTask('${t.id}')">
+        <div class="task-checkbox">${isDone?'✓':''}</div>
         <div class="task-text">${esc(t.text)}</div>
         ${projTag}
-        <span class="task-category cat-${t.cat||'defi'}">${catLabels2[t.cat]||t.cat}</span>
-        <button class="btn-icon" onclick="delTask(event,'${t.id}')" style="flex-shrink:0">🗑</button>
+        <button class="btn-icon" onclick="openEditTask(event,'${t.id}')" title="Edytuj zadanie" style="flex-shrink:0;opacity:0.6">✏️</button>
+        <button class="btn-icon" onclick="delTask(event,'${t.id}')" style="flex-shrink:0;color:var(--red);opacity:0.7">🗑</button>
       </div>
-      <div class="task-chart-wrap">
-        <div class="task-chart-header">
-          <span class="task-chart-label">Ostatnie 30 dni</span>
-          <span class="task-chart-count">✓ ${doneCount}/30 dni (${Math.round(doneCount/30*100)}%)</span>
+      <div class="task-chart-toggle" onclick="toggleChart('${t.id}')">
+        <span class="task-chart-toggle-label">Ostatnie 30 dni</span>
+        <div class="task-chart-toggle-right">
+          <span class="task-chart-count">✓ ${doneCount}/30 (${Math.round(doneCount/30*100)}%)</span>
+          <span class="task-chart-arrow" id="tarrow-${t.id}">▼</span>
         </div>
+      </div>
+      <div class="task-chart-body" id="tchart-${t.id}">
         <div class="task-chart-grid">${bars}</div>
       </div>
     </div>`;
@@ -1969,23 +2119,55 @@ function toggleTask(id) {
   renderDailyTasks();
 }
 
-async function saveNewTask() {
-  const text      = document.getElementById('new-task-text').value.trim();
+function toggleChart(taskId) {
+  const body  = document.getElementById('tchart-' + taskId);
+  const arrow = document.getElementById('tarrow-' + taskId);
+  if (!body) return;
+  const open = body.classList.toggle('open');
+  if (arrow) arrow.classList.toggle('open', open);
+}
+
+function openEditTask(e, id) {
+  e.stopPropagation();
+  const t = tasks.find(x => x.id === id);
+  if (!t) return;
+  document.getElementById('task-modal-title').textContent = '// EDYTUJ ZADANIE';
+  document.getElementById('edit-task-id').value   = t.id;
+  document.getElementById('new-task-text').value  = t.text;
+  populateTaskProjectSelect();
+  document.getElementById('new-task-project').value = t.projectId || '';
+  document.getElementById('task-save-btn').textContent = 'Zapisz zmiany';
+  document.getElementById('modal-add-task').classList.add('open');
+}
+
+async function saveTaskForm() {
+  const text    = document.getElementById('new-task-text').value.trim();
   if (!text) { showToast('⚠️ Wpisz treść zadania!'); return; }
-  const projectId = document.getElementById('new-task-project').value;
-  const projectName = projectId ? (projects.find(p=>p.id===projectId)?.name||'') : '';
-  const t = {
-    id: genId(),
-    text,
-    cat:      document.getElementById('new-task-cat').value,
-    projectId,
-    projectName,
-    createdAt: Date.now()
-  };
-  await saveTask(t);
+  const editId  = document.getElementById('edit-task-id').value;
+  const projId  = document.getElementById('new-task-project').value;
+  const projName = projId ? (projects.find(p => p.id === projId)?.name || '') : '';
+
+  if (editId) {
+    // Edycja istniejącego
+    const t = tasks.find(x => x.id === editId);
+    if (!t) return;
+    t.text        = text;
+    t.projectId   = projId;
+    t.projectName = projName;
+    await saveTask(t);
+    showToast('✓ Zadanie zaktualizowane!');
+  } else {
+    // Nowe zadanie
+    const t = { id: genId(), text, projectId: projId, projectName: projName, createdAt: Date.now() };
+    await saveTask(t);
+    showToast('✓ Zadanie dodane!');
+  }
   closeModal('modal-add-task');
+  // Reset modalu
+  document.getElementById('task-modal-title').textContent = '// NOWE ZADANIE';
+  document.getElementById('edit-task-id').value  = '';
   document.getElementById('new-task-text').value = '';
-  showToast('✓ Zadanie dodane!');
+  document.getElementById('task-save-btn').textContent = 'Dodaj zadanie';
 }
 
 async function delTask(e, id) {
