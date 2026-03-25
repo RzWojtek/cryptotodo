@@ -1180,14 +1180,66 @@ let currentUser = null;
    AUTH
 ============================================ */
 function signInWithGoogle() {
-  document.getElementById('login-error').textContent = '';
-  document.getElementById('login-loading').classList.remove('hidden');
+  const btn      = document.getElementById('login-btn');
+  const loading  = document.getElementById('login-loading');
+  const errorEl  = document.getElementById('login-error');
+
+  errorEl.textContent = '';
+  loading.classList.remove('hidden');
+  btn.disabled = true;
+
+  // Timeout bezpieczeństwa — jeśli nic się nie stanie przez 12s, odblokuj przycisk
+  const timeout = setTimeout(() => {
+    loading.classList.add('hidden');
+    btn.disabled = false;
+    errorEl.textContent = '✗ Przekroczono czas. Spróbuj ponownie lub sprawdź blokadę popupów.';
+  }, 12000);
+
   const provider = new firebase.auth.GoogleAuthProvider();
-  auth.signInWithPopup(provider).catch(err => {
-    document.getElementById('login-error').textContent = '✗ ' + err.message;
-    document.getElementById('login-loading').classList.add('hidden');
-  });
+  provider.setCustomParameters({ prompt: 'select_account' });
+
+  auth.signInWithPopup(provider)
+    .then(() => clearTimeout(timeout))
+    .catch(err => {
+      clearTimeout(timeout);
+
+      // Popup zablokowany przez przeglądarkę — użyj redirect
+      if (err.code === 'auth/popup-blocked' || err.code === 'auth/popup-closed-by-user') {
+        if (err.code === 'auth/popup-blocked') {
+          loading.classList.remove('hidden');
+          errorEl.textContent = '⚠️ Popup zablokowany — przekierowanie...';
+          auth.signInWithRedirect(provider);
+          return;
+        }
+        // Użytkownik zamknął popup — po prostu odblokuj przycisk
+        loading.classList.add('hidden');
+        btn.disabled = false;
+        errorEl.textContent = '';
+        return;
+      }
+
+      // Inny błąd
+      loading.classList.add('hidden');
+      btn.disabled = false;
+      errorEl.textContent = '✗ ' + (err.message || 'Błąd logowania. Spróbuj ponownie.');
+    });
 }
+
+// Obsłuż wynik redirect (gdy popup był zablokowany)
+auth.getRedirectResult().then(result => {
+  if (result && result.user) {
+    // Zalogowano przez redirect — onAuthStateChanged zajmie się resztą
+  }
+}).catch(err => {
+  if (err.code && err.code !== 'auth/no-auth-event') {
+    const errorEl = document.getElementById('login-error');
+    if (errorEl) errorEl.textContent = '✗ ' + err.message;
+    const loading = document.getElementById('login-loading');
+    if (loading) loading.classList.add('hidden');
+    const btn = document.getElementById('login-btn');
+    if (btn) btn.disabled = false;
+  }
+});
 
 function signOut() {
   if (!confirm('Wylogować się?')) return;
@@ -1197,11 +1249,15 @@ function signOut() {
 
 auth.onAuthStateChanged(user => {
   currentUser = user;
+  // Zawsze ukryj loading i odblokuj przycisk przy zmianie stanu
+  const loading = document.getElementById('login-loading');
+  const btn     = document.getElementById('login-btn');
+  if (loading) loading.classList.add('hidden');
+  if (btn)     btn.disabled = false;
+
   if (user) {
-    // Zalogowany
     document.getElementById('login-screen').classList.add('hidden');
     document.getElementById('app-wrapper').style.display = 'block';
-    // Pokaż avatar
     if (user.photoURL) {
       const av = document.getElementById('user-avatar');
       av.src = user.photoURL;
@@ -1210,10 +1266,8 @@ auth.onAuthStateChanged(user => {
     }
     initApp();
   } else {
-    // Wylogowany
     document.getElementById('login-screen').classList.remove('hidden');
     document.getElementById('app-wrapper').style.display = 'none';
-    document.getElementById('login-loading').classList.add('hidden');
   }
 });
 
