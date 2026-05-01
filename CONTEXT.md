@@ -354,6 +354,17 @@ node --check /tmp/check.js
 # Dodaj: twoja-domena.vercel.app
 ```
 
+
+Daily Tasks — dodano pole URL do zadań (maj 2026)
+
+Schemat dokumentu zadania rozszerzony o pole url: string (opcjonalne)
+Modal dodawania/edycji zadania (modal-add-task) zawiera teraz pole "Link (opcjonalnie)" (id="new-task-url", type="url") — umieszczone między polem treści a wyborem projektu
+openEditTask() — wczytuje t.url do pola #new-task-url przy edycji
+saveTaskForm() — odczytuje i zapisuje pole url zarówno przy tworzeniu nowego zadania, jak i edycji istniejącego
+Reset pola #new-task-url dodany w: saveTaskForm() oraz bloku reset w openModal('modal-add-task')
+Render zadania — jeśli t.url istnieje, wyświetla ikonę 🔗 jako klikalny link (<a target="_blank">) otwierający stronę w przeglądarce; ikona umieszczona między badge projektu a przyciskiem edycji; kliknięcie nie triggeruje checkboxa (stopPropagation)
+
+
 ---
 
 ## PROMPT STARTOWY
