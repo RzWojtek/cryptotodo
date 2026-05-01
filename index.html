@@ -1022,6 +1022,10 @@ main{max-width:1400px;margin:0 auto;padding:24px 20px}
       <input type="text" class="form-input" id="new-task-text" placeholder="np. Sprawdź gas fees na L2...">
     </div>
     <div class="form-group">
+      <label class="form-label">Link (opcjonalnie)</label>
+      <input type="url" class="form-input" id="new-task-url" placeholder="https://...">
+    </div>
+    <div class="form-group">
       <label class="form-label">Projekt (opcjonalnie)</label>
       <select class="form-input" id="new-task-project">
         <option value="">— bez projektu</option>
@@ -1440,6 +1444,7 @@ function openModal(id) {
     if (!document.getElementById('edit-task-id').value) {
       document.getElementById('task-modal-title').textContent = '// NOWE ZADANIE';
       document.getElementById('new-task-text').value = '';
+      document.getElementById('new-task-url').value  = '';
       document.getElementById('task-save-btn').textContent = 'Dodaj zadanie';
     }
   }
@@ -2077,6 +2082,7 @@ function renderDailyTasks() {
         <div class="task-checkbox">${isDone?'✓':''}</div>
         <div class="task-text">${esc(t.text)}</div>
         ${projTag}
+        ${t.url ? `<a href="${esc(t.url)}" target="_blank" rel="noopener" class="btn-icon" onclick="event.stopPropagation()" title="${esc(t.url)}" style="flex-shrink:0;opacity:0.7;text-decoration:none">🔗</a>` : ''}
         <button class="btn-icon" onclick="openEditTask(event,'${t.id}')" title="Edytuj zadanie" style="flex-shrink:0;opacity:0.6">✏️</button>
         <button class="btn-icon" onclick="delTask(event,'${t.id}')" style="flex-shrink:0;color:var(--red);opacity:0.7">🗑</button>
       </div>
@@ -2130,6 +2136,7 @@ function openEditTask(e, id) {
   document.getElementById('task-modal-title').textContent = '// EDYTUJ ZADANIE';
   document.getElementById('edit-task-id').value   = t.id;
   document.getElementById('new-task-text').value  = t.text;
+  document.getElementById('new-task-url').value   = t.url || '';
   populateTaskProjectSelect();
   document.getElementById('new-task-project').value = t.projectId || '';
   document.getElementById('task-save-btn').textContent = 'Zapisz zmiany';
@@ -2142,6 +2149,7 @@ async function saveTaskForm() {
   const editId  = document.getElementById('edit-task-id').value;
   const projId  = document.getElementById('new-task-project').value;
   const projName = projId ? (projects.find(p => p.id === projId)?.name || '') : '';
+  const url     = document.getElementById('new-task-url').value.trim();
 
   if (editId) {
     // Edycja istniejącego
@@ -2150,11 +2158,12 @@ async function saveTaskForm() {
     t.text        = text;
     t.projectId   = projId;
     t.projectName = projName;
+    t.url         = url;
     await saveTask(t);
     showToast('✓ Zadanie zaktualizowane!');
   } else {
     // Nowe zadanie
-    const t = { id: genId(), text, projectId: projId, projectName: projName, createdAt: Date.now() };
+    const t = { id: genId(), text, projectId: projId, projectName: projName, url, createdAt: Date.now() };
     await saveTask(t);
     showToast('✓ Zadanie dodane!');
   }
@@ -2163,6 +2172,7 @@ async function saveTaskForm() {
   document.getElementById('task-modal-title').textContent = '// NOWE ZADANIE';
   document.getElementById('edit-task-id').value  = '';
   document.getElementById('new-task-text').value = '';
+  document.getElementById('new-task-url').value  = '';
   document.getElementById('task-save-btn').textContent = 'Dodaj zadanie';
 }
 
